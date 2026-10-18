@@ -1,0 +1,8 @@
+{
+  "name": "Emme Studio",
+  "description": "The manager app of An intuitive, aesthetic business and scheduling tool designed for manicurists to customize and manage their beauty salons effortlessly.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

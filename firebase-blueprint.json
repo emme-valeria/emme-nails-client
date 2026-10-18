@@ -1,0 +1,90 @@
+{
+  "entities": {
+    "BusinessSettings": {
+      "title": "Configuración del Negocio",
+      "description": "Configuración y personalización del salón de belleza",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Nombre del salón" },
+        "ownerName": { "type": "string", "description": "Nombre de la dueña" },
+        "logoUrl": { "type": "string", "description": "URL del logo" },
+        "primaryColor": { "type": "string", "description": "Color principal (hex/oklch)" },
+        "secondaryColor": { "type": "string", "description": "Color secundario" },
+        "address": { "type": "string", "description": "Dirección física" },
+        "phone": { "type": "string", "description": "Teléfono de contacto" },
+        "openingHours": { "type": "string", "description": "Horarios de atención" }
+      },
+      "required": ["name"]
+    },
+    "Client": {
+      "title": "Cliente",
+      "description": "Información de los clientes del salón",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID del dueño (manicurista)" },
+        "name": { "type": "string", "description": "Nombre completo" },
+        "phone": { "type": "string", "description": "Teléfono" },
+        "email": { "type": "string", "description": "Correo electrónico", "format": "email" },
+        "notes": { "type": "string", "description": "Notas sobre preferencias o alergias" },
+        "instagram": { "type": "string", "description": "Usuario de Instagram" },
+        "lastVisit": { "type": "string", "format": "date-time", "description": "Fecha de la última visita" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "phone"]
+    },
+    "Service": {
+      "title": "Servicio",
+      "description": "Catálogo de servicios ofrecidos",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string", "description": "Nombre del servicio (ej. Manicura Rusa)" },
+        "description": { "type": "string" },
+        "price": { "type": "number", "description": "Precio del servicio" },
+        "duration": { "type": "number", "description": "Duración estimada en minutos" },
+        "category": { "type": "string", "enum": ["Manicura", "Pedicura", "Extensiones", "Nail Art", "Retirado"] },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["userId", "name", "price", "duration"]
+    },
+    "Appointment": {
+      "title": "Cita",
+      "description": "Agendamiento de citas",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "startTime": { "type": "string", "description": "Hora de inicio (HH:mm)" },
+        "endTime": { "type": "string", "description": "Hora de fin (HH:mm)" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled", "no-show"] },
+        "totalPrice": { "type": "number" },
+        "notes": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "clientId", "serviceId", "date", "startTime", "status"]
+    }
+  },
+  "firestore": {
+    "businessSettings": {
+      "schema": "BusinessSettings",
+      "description": "Configuración global por usuario"
+    },
+    "clients": {
+      "schema": "Client",
+      "description": "Colección de clientes"
+    },
+    "services": {
+      "schema": "Service",
+      "description": "Catálogo de servicios"
+    },
+    "appointments": {
+      "schema": "Appointment",
+      "description": "Colección de citas"
+    }
+  }
+}

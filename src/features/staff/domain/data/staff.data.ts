@@ -1,0 +1,43 @@
+import { StaffMember } from '../types/staff.types';
+
+export const STAFF_MEMBERS: StaffMember[] = [
+  {
+    id: 'staff-1',
+    name: 'Emme V.',
+    role: 'Founder & Master Artist',
+    specialties: ['Uñas Esculturales', 'Manicura Rusa', '3D Nail Art', 'Russian Gel'],
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+    rating: 5.0,
+    completedAppointments: 320,
+    bio: 'Especialista internacional con 8 años de experiencia en estructura y diseño de alta gama.',
+    availableDays: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'],
+    isAvailableToday: true,
+    extraFee: 10,
+  },
+  {
+    id: 'staff-2',
+    name: 'Valeria A.',
+    role: 'Nail Artist & Gel Specialist',
+    specialties: ['Soft Gel', 'Rubber Base', 'Esmaltado Gelish', 'Diseños Minimalistas'],
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
+    rating: 4.9,
+    completedAppointments: 210,
+    bio: 'Apasionada por la salud de la uña natural y técnicas de durabilidad prolongada.',
+    availableDays: ['martes', 'miercoles', 'jueves', 'viernes', 'sabado'],
+    isAvailableToday: true,
+    extraFee: 0,
+  },
+  {
+    id: 'staff-3',
+    name: 'Sofia M.',
+    role: 'Pedicure & Spa Specialist',
+    specialties: ['Pedicura Spa', 'Jelly Spa', 'Manicura Express', 'Tratamientos de Hidratación'],
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80',
+    rating: 4.9,
+    completedAppointments: 185,
+    bio: 'Experta en relajación, podología estética y spa regenerativo para manos y pies.',
+    availableDays: ['lunes', 'miércoles', 'viernes', 'sabado'],
+    isAvailableToday: false,
+    extraFee: 0,
+  },
+];
