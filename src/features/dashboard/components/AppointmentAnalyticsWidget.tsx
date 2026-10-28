@@ -112,8 +112,8 @@ export function AppointmentAnalyticsWidget() {
                 <Award className="size-3.5 text-[#845E1B]" />
                 Puntos Emme Club
               </span>
-              <span className="text-[10px] font-bold text-[#845E1B] bg-[#FAF5EC] border border-[#ECDCC2]/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <Star className="size-3 fill-[#C59B4E] text-[#C59B4E]" />
+              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <Star className="size-3 fill-purple-600 text-purple-600" />
                 VIP Platinum
               </span>
             </div>
@@ -276,4 +276,3 @@ export function AppointmentAnalyticsWidget() {
     </div>
   );
 }
-

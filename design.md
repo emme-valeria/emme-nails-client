@@ -1,194 +1,226 @@
-ido con desenfoque de fondo de `25px` (efecto esmerilado de panel trasero).
-*   `material-regular`: Desenfoque de `30px` y mayor opacidad para paneles flotantes o ventanas emergentes.
-*   `premium-card`: Tarjetas con radio de esquina suavizado (`24px`), un microborde gris del 4% de opacidad (`border-black/[0.04]`), y una sombra extendida difusa que levanta la tarjeta sutilmente al pasar el cursor.
+# Emme Studio — Design System & Architecture
 
-### C. Tipografía Elegante
-Utiliza importaciones dinámicas desde Google Fonts y fuentes del sistema optimizadas:
-*   **Display / Cabeceras**: `Inter Tight` o `SF Pro Display`, configurada con tracking ajustado (`tracking-tight`) para dar un aspecto compacto y moderno de revista editorial.
-*   **Texto Libre**: `Inter` o `SF Pro Text`, con balance óptimo de espacios y peso de fuente mediano para interfaces densas de datos.
-*   **Datos / Indicadores**: `SF Mono` o `JetBrains Mono` para marcas de tiempo, totales financieros y estados del sistema.
+**Versión:** 2.5.0
+**Estado:** Documento vivo
+**Ámbito:** Aplicación cliente Expo para iOS, Android y web; módulos Vite heredados del Studio Manager
+**Identidad:** Belleza boutique, minimalismo editorial y rosa Emme
+
+> Este documento separa el comportamiento implementado del roadmap. No considerar una integración como activa si aparece únicamente en la visión futura.
 
 ---
 
-## 3. Arquitectura del Flujo de Datos (Estado Global)
+## 1. Producto y alcance
 
-La aplicación utiliza un patrón de arquitectura SPA (Single Page Application) reactivo donde **`AppContext.tsx`** actúa como el núcleo de estado y el orquestador principal del sistema.
+Emme Studio conecta a las clientas con los servicios del estudio: descubrir tratamientos, cotizar diseños de uñas, conversar con Emme AI y reservar citas. La experiencia principal se está migrando a Expo Router para compartir interfaz y navegación entre iOS, Android y web.
 
+El repositorio también conserva el código anterior de **EmmeNails Studio Manager**, una SPA Vite con lógica administrativa. Esta base heredada no equivale a que todas sus vistas o integraciones estén conectadas a la app Expo.
+
+### Principios de experiencia
+
+- **Belleza silenciosa:** superficies claras, jerarquía tipográfica y espacio negativo; el rosa destaca acciones, no compite con el contenido.
+- **Una acción principal por momento:** reservar, cargar una referencia o continuar una conversación debe ser fácil de descubrir y tocar.
+- **Contexto sobre decoración:** mostrar detalles reales de la cita cuando existan y un estado vacío útil cuando no existan.
+- **IA con expectativas honestas:** indicar cuándo una estimación es orientativa o cuando el backend inteligente no está disponible.
+- **Progresión clara:** dividir cotización en referencia, análisis y resultado; evitar formularios que se alarguen innecesariamente.
+- **Accesibilidad táctil:** controles de tamaño suficiente, estados seleccionados identificables y contraste legible.
+
+---
+
+## 2. Identidad visual y tokens
+
+Base Apple Light, con el azul de acción sustituido por el rosa de marca Emme (`#E05286`). Mantener los neutros y colores semánticos sin teñirlos de rosa.
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--background` | `#FBFBFD` | Fondo general |
+| `--foreground` | `#1D1D1F` | Texto principal |
+| `--primary` | `#E05286` | Acciones y acentos Emme (sustituye el azul Apple) |
+| `--primary-fg` | `#FFFFFF` | Texto sobre acción primaria |
+| `--secondary` | `#F5F5F7` | Tarjetas y contenedores secundarios |
+| `--secondary-fg` | `#1D1D1F` | Texto sobre superficies secundarias |
+| `--muted` | `rgba(0,0,0,0.05)` | Superficies suaves y divisores |
+| `--muted-foreground` | `#86868B` | Metadatos y subtítulos |
+| `--accent` | `rgba(224,82,134,0.10)` | Realces y estados activos rosas |
+| `--destructive` | `#FF3B30` | Alertas críticas/cancelaciones |
+| `--border` | `rgba(0,0,0,0.08)` | Delimitadores finos |
+| `--input` | `rgba(0,0,0,0.03)` | Fondo de campos |
+
+Colores semánticos: éxito/confirmado Emerald `#10B981`; pendiente/precaución Amber `#F59E0B`; cancelación/alerta Red `#EF4444`; VIP Purple/Indigo `#6366F1`. Conservar sus significados y comprobar contraste en cada combinación; para texto normal, objetivo WCAG AA de 4.5:1.
+
+### Materiales y elevación
+
+- Tarjetas principales: fondo blanco, radio de 20–28 px, borde neutro de baja opacidad y sombra difusa suave.
+- Panel inferior/tab bar: superficie opaca o translúcida discreta, separación clara del contenido y respeto de safe areas.
+- Evitar bordes oscuros, sombras duras y halos decorativos que resten legibilidad.
+- En React Native usar `StyleSheet`, `expo-linear-gradient` y elevación/sombra nativa; CSS de `globals.css` solo aplica a la SPA Vite.
+
+### Tipografía
+
+- **Inter:** interfaz, controles, datos y texto general.
+- **Cormorant Garamond / serif editorial:** titulares puntuales de marca, cuando esté disponible en la plataforma.
+- Títulos con peso claro y tracking compacto; textos secundarios con interlineado suficiente.
+- No depender de fuentes remotas para mostrar contenido crítico: precargar o usar fallback del sistema.
+
+### Geometría e interacción
+
+- Formularios e inputs: radio de 16 px (`rounded-2xl`).
+- Botones estándar: radios de 12–16 px (`rounded-xl`–`rounded-2xl`); controles icon-only pueden ser circulares.
+- Tarjetas: radio de 24 px. Modales y paneles grandes: radio de 32 px. Badges y pills: radio completo.
+- Feedback táctil breve: `active:scale-[0.98]` o `active:scale-[0.95]`; reservar el efecto para elementos interactivos.
+- Curva común: `cubic-bezier(0.23,1,0.32,1)`, 300–500 ms. En Expo Reanimated, animar preferentemente `transform` y `opacity` y respetar movimiento reducido.
+
+---
+
+## 3. Arquitectura actual
+
+### Expo cliente (entrada principal)
+
+- Expo SDK 57, React Native y Expo Router; rutas en `app/`.
+- `app/_layout.tsx`: providers, protección de rutas y splash animada.
+- `src/expo/AuthContext.tsx`: sesión local de desarrollo, persistida en AsyncStorage.
+- `src/expo/BookingContext.tsx`: citas locales por perfil/dispositivo, persistidas en AsyncStorage.
+- `src/expo/api.ts`: cliente HTTP Expo multiplataforma para endpoints del servidor.
+- `src/expo/AnimatedSplash.tsx`: splash de marca, carga de Inter, modo oscuro y movimiento reducido.
+
+### Rutas Expo
+
+| Ruta | Función actual |
+|---|---|
+| `/(tabs)` | Inicio, saludo, accesos a cotización/reserva y próxima cita |
+| `/(tabs)/agenda` | Lista de citas guardadas localmente |
+| `/(tabs)/chat` | Conversación con Emme AI |
+| `/(tabs)/profile` | Perfil local y cierre de sesión |
+| `/services` | Catálogo de servicios |
+| `/booking` | Selección de servicio, día y hora; guarda en el dispositivo |
+| `/quotes` | Referencia fotográfica, análisis animado y resultado editable |
+| `/login` | Flujo de desarrollo local, no verifica SMS real |
+
+El tab bar Expo tiene cuatro destinos: Inicio, Chat, Mis Citas y Perfil. En Inicio, los accesos rápidos abren Cotizar con IA y Agendar cita.
+
+### API y Vite heredado
+
+- `server.ts` ejecuta Express en el puerto `3000`, sirve `/api/health`, `/api/gemini/chat` y `/api/gemini/analyze-nail-image`.
+- Expo Web se sirve por Metro, normalmente en el puerto `8081` (o el puerto que imprima Expo). Para desarrollo, `npm run web` inicia API y Expo juntos.
+- Un teléfono físico no puede usar `localhost` para llegar al ordenador: configurar `EXPO_PUBLIC_API_URL` con la IP LAN del ordenador y compartir la misma Wi‑Fi.
+- Vite se conserva mediante `legacy:dev`, `legacy:build` y `legacy:start`. La carpeta `src/` contiene la SPA y los módulos heredados. El `index.html` raíz es actualmente una splash HTML independiente y no monta el cliente Vite.
+
+---
+
+## 4. Flujos de clienta
+
+### Inicio
+
+- Cabecera de marca con mascota y saludo adaptable al estado de cita.
+- Acciones rápidas: Cotizar con IA y Agendar cita.
+- Tarjeta principal de cita: servicio, día, hora y acceso a gestión; si no hay cita, presentar un estado vacío claro con acceso a reserva.
+- Mantener el contenido dentro de un `ScrollView`, dejando margen inferior para el dock flotante y safe area.
+
+### Cotización con IA
+
+1. Elegir foto de galería; comprimir con `expo-image-manipulator`.
+2. Añadir notas y preferencias rápidas opcionales.
+3. Mostrar una vista de análisis con barrido animado y mensajes por etapa.
+4. Presentar el resultado en una pantalla separada: foto, servicio sugerido, descripción, forma, largo, complejidad, técnica, colores, tiempo y estimado.
+5. Permitir editar forma y largo antes de pasar a reserva.
+
+El backend valida si hay uñas y puede producir un fallback local. Sin `GEMINI_API_KEY`, el resultado es orientativo y no debe presentarse como análisis real de Gemini.
+
+### Reserva
+
+- Selección de servicio, día y hora.
+- Confirmación visible antes de guardar.
+- Actualmente la cita queda guardada en AsyncStorage; no se sincroniza con calendario ni con el estado del Studio Manager.
+
+### Chat
+
+- Historial y entrada táctil con sugerencias.
+- El cliente llama al endpoint server-side de Gemini. Acciones sugeridas pueden enlazar catálogo, cotización y reserva.
+- No exponer claves de IA en variables `EXPO_PUBLIC_*`.
+
+---
+
+## 5. Contratos de datos Expo actuales
+
+### Perfil local (`ExpoClient`)
+
+```ts
+export type ExpoClient = {
+  name: string;
+  phone: string;
+  signedInAt: number;
+};
 ```
-       ┌───────────────────────────────────────────────────┐
-       │                 AppContext.tsx                    │
-       │  (State: services, clients, appointments, profile)│
-       └─────────────────────────┬─────────────────────────┘
-                                 │
-         ┌───────────────────────┼───────────────────────┐
-         ▼                       ▼                       ▼
-┌──────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  cacheService    │    │   Google Auth    │    │ Google Workspace│
-│  (LocalStorage)  │    │  (Firebase Auth) │    │ (Calendar/Sheets│
-│  Persistencia    │    │  OAuth Token     │    │ API REST Client)│
-└──────────────────┘    └──────────────────┘    └─────────────────┘
+
+La autenticación es una simulación local de desarrollo; el código de seis dígitos no se verifica con SMS ni Firebase.
+
+### Cita local (`NativeAppointment`)
+
+```ts
+export type NativeAppointment = {
+  id: string;
+  service: string;
+  day: string;
+  time: string;
+  createdAt: number;
+};
 ```
 
-### El Modelo de Datos Unificado
-El contexto global maneja cuatro entidades altamente tipadas en TypeScript:
+### Análisis de uñas (`GeminiNailImageAnalysis`)
 
-1.  **Servicios (`Service`)**:
-    *   `id` (UUID), `name`, `description`, `price`, `duration` (en minutos), `category` (Manicura Natural, Extensiones, Pedicura, Nail Art, etc.), e `isActive` (booleano para visibilidad comercial).
-2.  **Clientes (`Client`)**:
-    *   `id` (UUID), `name`, `phone` (formato telefónico internacional), `email`, `notes` de cuidado, `allergies` (crítico para productos como metacrilatos y látex), `preferences` (música, bebidas) e `isVip`.
-3.  **Citas (`Appointment`)**:
-    *   `id` (UUID), `clientId`, `serviceId`, `date` (ISO `YYYY-MM-DD`), `startTime`/`endTime` (`HH:mm`), `notes` específicas del diseño de uñas, y `googleEventId` (para trackeo con Google Calendar).
-4.  **Perfil del Negocio (`BusinessProfile`)**:
-    *   Especifica la meta financiera mensual (`monthlyGoal`), horarios semanales laborales activos, un sistema automático simulado para recordatorios de WhatsApp, promociones activas e históricas, y fechas festivas o vacaciones configurables.
+Incluye detección de uñas, motivo de rechazo, servicio recomendado, técnica, forma, largo, complejidad, colores, extras, duración, precios, descripción, consejo profesional y marca de fallback.
+
+Los contratos administrativos más ricos de `src/domain` y `src/app/AppContext.tsx` pertenecen a la aplicación heredada y aún no están unificados con los contratos Expo.
 
 ---
 
-## 4. Estructura de Módulos de la Aplicación
+## 6. Sistema de componentes y accesibilidad
 
-La navegación lateral (`Sidebar` en escritorio, `MobileNav` en formato móvil) enruta de forma elegante a las siguientes vistas:
-
-### I. Dashboard de Control Comercial (`/dashboard`)
-*   Muestra 4 tarjetas de KPIs instantáneos: Facturación del Mes, Meta Mensual (con barra de progreso visual circular o lineal), Citas de Hoy y Nuevas Clientas.
-*   **Visualizaciones de Datos**: Incorpora un panel analítico interactivo con gráficos de líneas y barras con transiciones suaves suministradas por `recharts` que muestran la facturación real con respecto a las metas.
-*   Visualización de "Próximas Citas" interactivas con cambio de estado rápido.
-
-### II. Agenda Calendario (`/agenda`)
-*   Soporta filtrado temporal diario mediante el componente estético `react-day-picker` integrado en un popover estilo Apple.
-*   Muestra el día de forma cronológica en bloques de tiempo verticales u horizontales.
-*   Permite añadir citas de forma intuitiva arrastrando datos o seleccionando un formulario flotante con autocompletado inteligente de clientes y servicios previamente creados.
-
-### III. Directorio de Clientas (`/clients`)
-*   Presenta un buscador de alta velocidad que filtra registros por nombre o número telefónico.
-*   Muestra información sensible de forma directa: Tarjetas táctiles individuales donde se destacan alertas en rojo si el cliente presenta **alergias**, notas de preferencias personales (p. ej., *"toma café descafeinado"*), y un botón de acceso directo para enviar recordatorios rápidos.
-
-### IV. Catálogo de Servicios (`/services`)
-*   Organizado de forma visual mediante pestañas categorizadas por tipo de tratamiento.
-*   Permite añadir nuevos servicios ingresando nombre, duración estimada en minutos y precio del servicio.
-*   Facilita la desactivación temporal de cualquier servicio mediante interruptores táctiles (`Switch`), lo cual oculta instantáneamente el servicio de los selectores de agendas sin necesidad de borrar los reportes históricos.
-
-### V. Finanzas y Desempeño (`/finances`)
-*   Sección enfocada puramente en números del negocio.
-*   Mapea ingresos brutos acumulados frente a gastos de stock e insumos.
-*   Desglosa los servicios más demandados por porcentaje y volumen, permitiendo planificar campañas de márketing.
-
-### VI. Panel de Configuración e Integraciones (`/settings`)
-*   **Configuración del Salón**: Horarios detallados de apertura, cierre y tiempos de almuerzo.
-*   **Fechas Especiales**: Gestión de vacaciones, feriados nacionales y días de horario reducido.
-*   **Automatización de Notificaciones**: Editor interactivo de platillas de WhatsApp usando comodines dinámicos como `{cliente}`, `{servicio}`, `{fecha}` y `{hora}`.
-*   **Control de Integración con Google**: Interfaz interactivo para enlazar la cuenta de Google, activar o desactivar la sincronización en segundo plano de Google Calendar, y configurar la exportación inteligente de reportes comerciales a Google Sheets.
+- Componentes compartidos y reglas visuales deben vivir fuera de `app/`, dejando allí solo rutas/layouts.
+- Botones con `accessibilityRole`, `accessibilityLabel` cuando el icono no sea autoexplicativo, y `accessibilityState` para disabled/selected/busy.
+- Estados deshabilitados deben conservar texto legible y explicar cómo continuar.
+- Inputs con placeholder breve, borde visible, estado de foco y teclado adecuado al dato.
+- Imágenes con `accessibilityLabel` cuando aportan información; las decorativas deben ignorarse por lectores de pantalla.
+- Back, cerrar y acciones principales con áreas táctiles de al menos 44 × 44 pt.
+- No usar únicamente color para indicar selección o error.
+- Usar `KeyboardAvoidingView` en formularios y `keyboardShouldPersistTaps="handled"` en scrolls con controles.
 
 ---
 
-## 5. Integración Tecnológica con Google Workspace
+## 7. Seguridad, persistencia y configuración
 
-La característica más potente de EmmeNails es su comunicación nativa con APIs de Google sin requerir servidores intermediarios que vulneren la privacidad del usuario, realizando llamadas seguras utilizando tecnologías del navegador.
+- `AsyncStorage` es almacenamiento local de conveniencia, no almacén seguro para credenciales o secretos.
+- `GEMINI_API_KEY` permanece en el servidor Express; nunca incluirla en el bundle móvil.
+- Las CORS de desarrollo deben limitarse a origen local o a orígenes configurados.
+- Configuración del splash nativo en `app.json` debe coincidir con el fondo del splash animado: claro `#FDFDFD`, oscuro `#0E0E10`.
+- Revisar permisos de fotos/cámara en iOS/Android y explicar el motivo antes de solicitarlos.
 
-```
-                  ┌─────────────────────────────────┐
-                  │       Flow de Google Sync       │
-                  └────────────────┬────────────────┘
-                                   │
-                [Cita Creada, Modificada o Cancelada]
-                                   │
-                                   ▼
-                   ¿Tiene Cuenta Google Conectada?
-                     /                         \
-                   SÍ                           NO
-                   /                             \
-     ┌────────────┴─────────────┐           [Fin de Flujo:
-     │   Calendar Sync          │         Persiste solo local]
-     │   - PUT/POST a events    │
-     │   - DELETE si cancelada  │
-     └────────────┬─────────────┘
-                  │
-                  ▼
-     ┌──────────────────────────┐
-     │   Sheets Auto Export     │
-     │   - BatchUpdate pestañas │
-     │   - Sync Clients & Citas │
-     │   - Recalcula KPI Finanzas│
-     └──────────────────────────┘
+---
+
+## 8. Scripts útiles
+
+```sh
+npm run web          # API + Expo Web
+npm run ios          # API + Expo en simulador iOS
+npm run android      # API + Expo en emulador Android
+npm run build        # Exportación web Expo
+npm run lint         # TypeScript del proyecto
+npm run legacy:dev   # Servidor/API y cliente Vite heredado
+npm run legacy:build # Build Vite heredado
 ```
 
-### A. Capa de Autenticación (`googleAuth.ts`)
-*   Utiliza la biblioteca oficial de **Firebase Authentication** bajo el proveedor `GoogleAuthProvider`.
-*   Solicita dos ámbitos de permisos (Scopes) con consentimiento explícito de la usuaria:
-    1.  `https://www.googleapis.com/auth/calendar.events` (Lectura y edición de eventos de calendario).
-    2.  `https://www.googleapis.com/auth/spreadsheets` (Acceso completo para crear y editar hojas de cálculo).
-*   Guarda una referencia del token temporal en `sessionStorage` para restaurar silenciosamente la sesión ante reinicios del ambiente y refrescar estados visuales.
+---
 
-### B. Módulo de Calendario (`googleWorkspace.ts`)
-*   **Mapeo de Husos Horarios**: Determina el huso horario local de la manicurista (ej. `Europe/Madrid`) para formatear las horas de inicio de forma precisa bajo la especificación ISO 8601.
-*   **Creación y Actualización (`syncAppointmentToCalendar`)**:
-    *   Envía peticiones `POST` al endpoint primario de Calendar para nuevas citas.
-    *   Envía peticiones `PUT` indicando el `googleEventId` previo si la cita sufre cambios de horario o día.
-*   **Sincronización del Estado**: Si la cita se marca con estado `'cancelled'`, el sistema hace una llamada `DELETE` directa para remover la cita de Google Calendar automáticamente.
-*   **Colores de Evento**: Asigna identificadores de color específicos en Calendar según el estado de la cita (`colorId: 10` verde si está finalizada, azul/amarillo si está pendiente o confirmada).
+## 9. Roadmap, no implementado aún
 
-### C. Módulo de Hojas de Cálculo (Generador de Reportes de Google Sheets)
-Cuando la sincronización a Sheets está activa y el usuario modifica registros, la aplicación ejecuta secuencialmente:
-1.  **Creación**: Si no existe una hoja de cálculo asociada, la aplicación invoca un `POST` a `/v4/spreadsheets` creando un archivo titulado `"EmmeNails - Sincronización de Negocio"`.
-2.  **Configuración de Pestañas (`setupSpreadsheetTabs`)**:
-    Realiza un `batchUpdate` a la API de Sheets para cerciorarse de que existan tres pestañas diferenciadas, aplicando el congelado de fila superior (`frozenRowCount: 1`) para facilitar la navegación:
-    *   `"Listado de Clientas"`: Exporta ID abreviado, Nombre, Teléfono, Correo, Alergias, Cumpleaños y Estado VIP.
-    *   `"Citas y Agenda"`: Sincroniza todas las citas con detalle de Clienta, Servicio contratado, fecha, horas y ganancia bruta de esa cita.
-    *   `"Resumen Financiero"`: Genera una vista ejecutiva dinámica de métricas clave calculando totales en tiempo real (Facturación completada, ticket promedio, cantidad de citas por estado, etc.) junto con la marca de tiempo exacta del proceso.
+- Autenticación real con Firebase/OTP y gestión segura de sesión.
+- Sincronización backend de perfiles, citas y catálogo entre dispositivos.
+- Disponibilidad real de agenda, cancelaciones, reprogramación y reglas de negocio centralizadas.
+- Integración de pagos/señas y confirmaciones.
+- Sincronización con Google Calendar y Sheets desde un backend con autorización explícita.
+- Módulos administrativos completos de clientas, finanzas, horarios, promociones, inventario y panel de negocio.
+- Onboarding y preferencias de notificaciones multiplataforma.
+- Configurar `GEMINI_API_KEY` y validar cotizaciones reales en iOS, Android y web.
 
 ---
 
-## 6. Estructura de Archivos del Proyecto
-
-La organización del código es modular para asegurar la escalabilidad del sistema:
-
-*   `/src/main.tsx`: Punto de entrada que inicializa React en modo estricto, encapsulado dentro de `AppProvider`.
-*   `/src/App.tsx`: Enrutador central con transiciones elegantes proporcionadas por `motion` (fades y deslizamiento vertical amortiguado) que alternan entre rutas analíticas (`/dashboard`, `/agenda`, `/clients`, `/services`, `/finances`, `/settings`).
-*   `/src/context/`:
-    *   `AppContext.tsx`: Gestor central del estado reactivo global del negocio y pasarela de sincronización con Google.
-*   `/src/services/`:
-    *   `cacheService.ts`: Almacenamiento local encapsulado de datos persistentes.
-    *   `googleAuth.ts`: Autenticación segura y persistencia de sesión a través de Firebase.
-    *   `googleWorkspace.ts`: Consumidor REST directo de las APIs de Sheets y Calendar v3/v4 de Google.
-*   `/src/components/`:
-    *   `/layout/`: Barra de navegación responsive (`Navigation.tsx`).
-    *   `/dashboard/`: Gráficos de tendencias, tarjetas sutiles y widgets ágiles.
-    *   `/appointments/`: Vistas de calendario, controles de estados de cita y formularios de reserva rápida.
-    *   `/clients/`: Buscadores de clientes, paneles de datos clínicos y contacto directo.
-    *   `/services/`: Clasificación de tratamientos por pestañas táctiles e interruptores lógicos.
-    *   `/finances/`: Métricas de costos, metas y rentabilidad por servicio.
-    *   `/settings/`: Configuración del bot, horarios con descanso, días feriados y conexión de Google.
-    *   `/onboarding/`: Interfaz interactiva de bienvenida y configuración rápida inicial del salón.
-    *   `/ui/`: Componentes atómicos pulidos y accesibles (botones con feedback elástico `active:scale-[0.95]`, inputs premium, selects, dropdowns, etc.).
-
----
-# EmmeNails - Studio Manager
-## Documento de Diseño de la Aplicación
-
-Este documento detalla la arquitectura, el diseño de la interfaz de usuario (UI), el modelo de datos y las integraciones del sistema **EmmeNails - Studio Manager**, una plataforma de software premium diseñada para manicuristas independientes y salones de belleza con el fin de optimizar sus operaciones, finanzas de negocio y la retención de clientes.
-
----
-
-## 1. Misión y Filosofía del Producto
-
-El software se ha concebido desde cero para ofrecer una alternativa sofisticada frente a las interfaces de administración tradicionales que suelen resultar confusas o sobrecargadas. Su misión es dotar a las profesionales de la manicura de una herramienta estética que inspire tanto profesionalismo como orden visual.
-
-### Pilares Clave del Producto
-*   **Aesthetic First**: Un diseño limpio, orgánico y con espaciados generosos influenciado directamente por los lenguajes de diseño de Apple Inc. (Clean Tech).
-*   **Integración Transparente**: Sincronización directa en tiempo real con las cuentas de Google de las usuarias (Google Calendar para la agenda personal y Google Sheets para hojas de cálculo de auditoría).
-*   **Cero Latencia**: Persistencia reactiva local apoyada por un caché robusto para que el flujo de uso sea instantáneo, incluso tras reinicios o refrescos.
-
----
-
-## 2. Filosofía de Diseño Visual y UX (Estilo "Apple Premium")
-
-La identidad de diseño del "Studio Manager" está anclada en la sutileza, los contrastes nítidos y las texturas suaves. Evita el "ruido visual" y los gradientes sobresaturados comunes, optando en su lugar por:
-
-### A. Paleta de Colores (Alta Legibilidad y Contraste)
-*   **Fondo Principal (`--background`)**: `#FBFBFD` — El blanco roto de Apple que reduce la fatiga visual.
-*   **Color de Texto (`--foreground`)**: `#1D1D1F` — Un carbón casi negro que evita contrastes estridentes y mantiene el rigor editorial.
-*   **Color Primario (`--primary`)**: `#0071E3` — El icónico azul de interacción de Apple para botones primarios y acentos seleccionados.
-*   **Soportes Neutros (`--muted-foreground`)**: `#86868B` — Gris suave para etiquetas secundarias e información de soporte.
-
-### B. Efectos de Materiales (Glassmorphism)
-La aplicación emplea clases especiales que imitan refracción de luz física mediante bordes sutiles y desenfoques intensivos utilizando el motor de renderizado CSS:
-*   `material-thin`: Fondo translúc
-Este ecosistema ha sido diseñado y codificado con altos estándares de calidad, asegurando un rendimiento fluido, seguridad en el manejo de tokens API y una experiencia estética premium para la administración del estudio.
+**Regla de mantenimiento:** al cambiar una ruta, contrato o integración, actualizar este documento y marcar explícitamente si la capacidad está implementada, en desarrollo o en roadmap.

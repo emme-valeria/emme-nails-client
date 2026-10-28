@@ -1,111 +1,244 @@
 <!doctype html>
-<html lang="es" class="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Emme Studio</title>
-    <meta name="description" content="App nativa iOS para clientas de Emme Studio con diseño Apple Human Interface Guidelines (HIG), agenda inteligente, asistente IA y cotizaciones en tiempo real." />
-    <meta property="og:title" content="Emme Studio" />
-    <meta property="og:description" content="App nativa iOS para clientas de Emme Studio con diseño Apple Human Interface Guidelines (HIG), agenda inteligente, asistente IA y cotizaciones en tiempo real." />
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FDFDFD">
+  <title>emme studio</title>
+  <!-- Conexiones anticipadas y precarga de Inter para evitar mostrar otra fuente. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap">
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #F5F1EB;
+      --studio-color: #1D1D1F;
+      --emme-color: #E5558B;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+    }
 
-    <!-- Suppress Vite HMR WebSocket connection failure in preview iframe environment -->
-    <script>
-      (function() {
-        if (typeof window !== 'undefined') {
-          // Intercept Vite HMR WebSocket so it never triggers connection errors or rejects
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-width: 100%;
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--background);
+    }
+
+    body {
+      position: relative;
+      isolation: isolate;
+      background-image: radial-gradient(ellipse 34% 25% at 50% 48%, rgba(229, 85, 139, 0.055), transparent 100%);
+    }
+
+    /* Grano SVG muy tenue, fijo para que no compita con el logotipo. */
+    body::before {
+      position: fixed;
+      z-index: -1;
+      inset: 0;
+      pointer-events: none;
+      content: "";
+      opacity: 0.12;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E");
+    }
+
+    .splash {
+      position: fixed;
+      z-index: 1;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      opacity: 1;
+      transform: scale(1);
+      transform-origin: center;
+    }
+
+    .logo {
+      position: relative;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.22em;
+      white-space: nowrap;
+      font-family: "Inter", sans-serif;
+      font-kerning: normal;
+      letter-spacing: -0.02em;
+      font-size: clamp(2.75rem, 10vw, 5.25rem);
+      line-height: 1;
+    }
+
+    .logo-part {
+      position: relative;
+      display: inline-block;
+      opacity: 0;
+      filter: blur(12px);
+      transform: translateY(16px);
+      will-change: transform, opacity, filter;
+    }
+
+    .emme { color: var(--emme-color); font-weight: 800; }
+    .studio { color: var(--studio-color); font-weight: 400; }
+
+    /* Copia del texto recortada a las letras: la luz nunca cae sobre el fondo. */
+    .shimmer-layer {
+      position: absolute;
+      inset: 0;
+      color: transparent;
+      pointer-events: none;
+      opacity: 0;
+      font: inherit;
+      font-kerning: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+      white-space: inherit;
+      background-image: linear-gradient(105deg,
+        transparent 0%, transparent 24%,
+        rgba(255,255,255,0.012) 30%,
+        rgba(255,255,255,0.028) 35%,
+        rgba(255,255,255,0.06) 40%,
+        rgba(255,255,255,0.12) 44%,
+        rgba(255,255,255,0.2) 47%,
+        rgba(255,255,255,0.3) 50%,
+        rgba(255,255,255,0.2) 53%,
+        rgba(255,255,255,0.12) 56%,
+        rgba(255,255,255,0.06) 60%,
+        rgba(255,255,255,0.028) 65%,
+        rgba(255,255,255,0.012) 70%,
+        transparent 76%, transparent 100%);
+      background-size: 250% 100%;
+      background-position: 150% 0;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      visibility: hidden;
+    }
+
+    .logo-part > .shimmer-layer.shimmer-run {
+      visibility: visible;
+      will-change: background-position;
+      animation: logo-shimmer 700ms cubic-bezier(0.45, 0, 0.25, 1) 1 both;
+    }
+
+    @keyframes logo-shimmer {
+      0% { opacity: 0; background-position: 150% 0; }
+      8% { opacity: 0.5; }
+      88% { opacity: 0.5; }
+      100% { opacity: 0; background-position: -50% 0; }
+    }
+
+    .splash.is-entered .logo-part {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateY(0);
+      transition: opacity 900ms var(--ease-out), transform 900ms var(--ease-out), filter 900ms var(--ease-out);
+    }
+
+    .splash.is-entered .studio { transition-delay: 120ms; }
+
+    .splash.is-exiting {
+      opacity: 0;
+      transform: scale(1.03);
+      transition: opacity 450ms var(--ease-in), transform 450ms var(--ease-in);
+      pointer-events: none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --background: #0E0E10;
+        --studio-color: #F5F5F7;
+      }
+      body { background-image: radial-gradient(ellipse 34% 25% at 50% 48%, rgba(229, 85, 139, 0.075), transparent 100%); }
+      .shimmer-layer { opacity: 0; }
+      .logo-part > .shimmer-layer.shimmer-run { animation-name: logo-shimmer-dark; }
+      @keyframes logo-shimmer-dark {
+        0% { opacity: 0; background-position: 150% 0; }
+        8% { opacity: 0.38; }
+        88% { opacity: 0.38; }
+        100% { opacity: 0; background-position: -50% 0; }
+      }
+    }
+
+    /* En movimiento reducido solo hacemos un fade sencillo, sin desplazamiento ni blur. */
+    @media (prefers-reduced-motion: reduce) {
+      .logo-part {
+        filter: none;
+        transform: none;
+        transition: opacity 450ms ease-out;
+      }
+      .splash.is-entered .logo-part { opacity: 1; }
+      .splash.is-entered .studio { transition-delay: 0ms; }
+      .shimmer-layer { display: none; }
+      .splash.is-exiting { transform: none; transition: opacity 300ms ease-out; }
+    }
+  </style>
+</head>
+<body>
+  <div class="splash" id="splash" aria-label="emme studio">
+    <div class="logo" aria-hidden="true">
+      <span class="logo-part emme">emme<span class="shimmer-layer" aria-hidden="true">emme</span></span>
+      <span class="logo-part studio">studio<span class="shimmer-layer" aria-hidden="true">studio</span></span>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const splash = document.getElementById('splash');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Espera a que Inter esté disponible antes de iniciar la animación.
+      const startSplash = async () => {
+        if (document.fonts && document.fonts.load) {
           try {
-            var OriginalWebSocket = window.WebSocket;
-            if (OriginalWebSocket) {
-              window.WebSocket = function(url, protocols) {
-                if (typeof url === 'string' && (url.includes('vite') || protocols === 'vite-hmr' || url.includes('/@vite/'))) {
-                  var fakeSocket = {
-                    binaryType: 'blob',
-                    bufferedAmount: 0,
-                    extensions: '',
-                    protocol: 'vite-hmr',
-                    readyState: 1, // OPEN
-                    url: url,
-                    CONNECTING: 0,
-                    OPEN: 1,
-                    CLOSING: 2,
-                    CLOSED: 3,
-                    send: function() {},
-                    close: function() {},
-                    addEventListener: function(type, listener) {
-                      if (type === 'open') {
-                        setTimeout(function() {
-                          try { listener({ type: 'open' }); } catch (e) {}
-                        }, 0);
-                      }
-                    },
-                    removeEventListener: function() {},
-                    dispatchEvent: function() { return true; },
-                    onopen: null,
-                    onmessage: null,
-                    onerror: null,
-                    onclose: null,
-                  };
-                  setTimeout(function() {
-                    if (typeof fakeSocket.onopen === 'function') {
-                      try { fakeSocket.onopen({ type: 'open' }); } catch (e) {}
-                    }
-                  }, 0);
-                  return fakeSocket;
-                }
-                return new OriginalWebSocket(url, protocols);
-              };
-              window.WebSocket.prototype = OriginalWebSocket.prototype;
-              window.WebSocket.CONNECTING = 0;
-              window.WebSocket.OPEN = 1;
-              window.WebSocket.CLOSING = 2;
-              window.WebSocket.CLOSED = 3;
-            }
-          } catch (e) {}
-
-          window.addEventListener('unhandledrejection', function(event) {
-            var reason = event.reason;
-            if (
-              reason &&
-              (
-                (typeof reason.message === 'string' && (reason.message.includes('WebSocket') || reason.message.includes('ws') || reason.message.includes('closed without opened'))) ||
-                (typeof reason.stack === 'string' && (reason.stack.includes('@vite/client') || reason.stack.includes('vite/dist/client')))
-              )
-            ) {
-              event.preventDefault();
-              event.stopPropagation();
-            }
-          });
-          window.addEventListener('error', function(event) {
-            if (
-              (event.message && (event.message.includes('WebSocket') || event.message.includes('ws') || event.message.includes('closed without opened'))) ||
-              (event.filename && (event.filename.includes('@vite/client') || event.filename.includes('vite/dist/client')))
-            ) {
-              event.preventDefault();
-              event.stopPropagation();
-            }
-          });
+            await Promise.all([
+              document.fonts.load('800 64px Inter', 'emme'),
+              document.fonts.load('400 64px Inter', 'studio')
+            ]);
+            await document.fonts.ready;
+          } catch (_) {
+            // Si la red no está disponible, el sistema usa la fuente sans-serif de respaldo.
+          }
         }
-      })();
-    </script>
 
-    <!-- Apple HIG & iOS PWA Capabilities -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Emme Studio" />
-    <meta name="apple-touch-fullscreen" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#FBFBFD" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-    
-    <!-- PWA & Mobile Web App Meta -->
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet" />
-  </head>
-  <body class="bg-[#FBFBFD] text-[#1D1D1F] dark:bg-black dark:text-[#F5F5F7] antialiased selection:bg-[#E05286]/15 font-sans overscroll-none touch-manipulation">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+        requestAnimationFrame(() => splash.classList.add('is-entered'));
+
+        if (reducedMotion) {
+          window.setTimeout(removeSplash, 850);
+          return;
+        }
+
+        // Inicia la pasada cuando Inter y el blur de ambas palabras ya terminaron.
+        window.setTimeout(() => {
+          splash.querySelectorAll('.shimmer-layer').forEach(layer => {
+            layer.classList.add('shimmer-run');
+            layer.addEventListener('animationend', () => {
+              layer.classList.remove('shimmer-run');
+              layer.style.visibility = 'hidden';
+            }, { once: true });
+          });
+        }, 1030);
+        // La salida empieza después del destello y una pausa breve.
+        window.setTimeout(() => {
+          splash.classList.add('is-exiting');
+          window.setTimeout(removeSplash, 450);
+        }, 1800);
+      };
+
+      function removeSplash() {
+        if (!splash.isConnected) return;
+        splash.remove();
+        window.dispatchEvent(new Event('splash:done'));
+      }
+
+      startSplash();
+    })();
+  </script>
+</body>
 </html>
-

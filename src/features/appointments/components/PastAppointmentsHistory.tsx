@@ -141,8 +141,8 @@ export function PastAppointmentsHistory({ pastAppointments, services }: PastAppo
                             <span>Completada</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full">
-                            <XCircle className="size-3.5 text-rose-600" />
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded-full">
+                            <XCircle className="size-3.5 text-red-600" />
                             <span>Cancelada</span>
                           </span>
                         )}

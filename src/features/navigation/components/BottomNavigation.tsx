@@ -98,51 +98,14 @@ export function BottomNavigation({ activeTab }: BottomNavigationProps) {
 
   return (
     <>
-      {/* Premium Fluid Curved Hump Bottom Navigation Bar */}
+      {/* Compact floating dock with persistent labels and safe-area spacing */}
       <div 
         className={cn(
-          "fixed bottom-0 sm:bottom-6 left-1/2 -translate-x-1/2 w-full sm:w-[calc(100%-3rem)] max-w-md h-[74px] z-50 transition-transform duration-500 ease-out lg:hidden",
+          "fixed bottom-[calc(env(safe-area-inset-bottom)+0.65rem)] left-1/2 -translate-x-1/2 w-[calc(100%-1.25rem)] max-w-[460px] h-[68px] z-50 transition-transform duration-300 ease-out lg:hidden",
           isVisible ? "translate-y-0" : "translate-y-24"
         )}
       >
-        {/* Drop shadow wrapper */}
-        <div className="absolute inset-0 drop-shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
-          {/* Container with rounded corners to clip the bottom and outer edges */}
-          <div className="absolute inset-0 sm:rounded-[24px] rounded-t-[24px] overflow-hidden pointer-events-none">
-            {/* Hardware-accelerated sliding container */}
-            <motion.div 
-              className="absolute top-0 left-0 h-full pointer-events-none flex justify-center"
-              style={{ width: `${100 / coreTabs.length}%` }}
-              initial={false}
-              animate={{ x: `${safeActiveIndex * 100}%` }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 400, 
-                damping: 24, 
-                mass: 0.6,
-                restDelta: 0.001 
-              }}
-            >
-              {/* Center Upward Hump */}
-              <div className="relative w-[120px] h-full flex-shrink-0">
-                {/* Left Fill */}
-                <div className="absolute top-[18px] right-full w-[2000px] h-[56px] bg-white dark:bg-[#121214]" />
-                
-                {/* The Curved Hump SVG */}
-                <svg width="120" height="74" viewBox="0 0 120 74" className="absolute top-0 left-0 w-[120px] h-full fill-white dark:fill-[#121214]">
-                  {/* Base at y=18, curving UPWARDS to a peak at y=0. Mobile standard size, wider and flatter at the top */}
-                  <path d="M 0 18 C 30 18, 35 0, 60 0 C 85 0, 90 18, 120 18 L 120 74 L 0 74 Z" />
-                </svg>
-                
-                {/* Right Fill */}
-                <div className="absolute top-[18px] left-full w-[2000px] h-[56px] bg-white dark:bg-[#121214]" />
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Foreground Interactive Nav Items */}
-        <nav className="absolute bottom-0 w-full h-[56px] flex items-center justify-between z-10">
+        <nav aria-label="Navegación principal" className="material-regular absolute inset-0 flex items-center justify-around gap-1 rounded-[22px] p-1.5">
           {coreTabs.map((tab, i) => {
             const active = i === safeActiveIndex;
             const Icon = tab.icon;
@@ -150,48 +113,20 @@ export function BottomNavigation({ activeTab }: BottomNavigationProps) {
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => handleTabClick(tab.path)}
-                className="relative flex-1 h-full flex items-center justify-center outline-none tap-highlight-transparent group"
+                className="relative flex h-full min-w-0 flex-1 items-center justify-center rounded-[16px] outline-none tap-highlight-transparent focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label={tab.label}
+                aria-current={active ? 'page' : undefined}
               >
                 <motion.div
                   initial={false}
-                  animate={{ 
-                    y: active ? -12 : 0, 
-                  }}
-                  transition={{ 
-                    type: "tween", 
-                    duration: 0.15, 
-                    ease: "easeOut"
-                  }}
-                  className={cn(
-                    "relative flex items-center justify-center rounded-full transition-all duration-300",
-                    active 
-                      ? "w-[48px] h-[48px] shadow-none" 
-                      : "w-[36px] h-[36px] bg-transparent shadow-none group-hover:bg-black/5 dark:group-hover:bg-white/5"
-                  )}
+                  animate={{ scale: active ? 1 : 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+                  className={cn("relative flex min-h-[52px] w-full flex-col items-center justify-center gap-1 rounded-[15px] px-1 transition-colors", active ? "bg-[#E05286] text-white shadow-[0_3px_10px_rgba(224,82,134,0.25)]" : "text-[#747985] hover:bg-black/[0.035] dark:text-[#B8BBC4] dark:hover:bg-white/[0.06]")}
                 >
-                  {active && (
-                    <motion.div 
-                      layoutId="activeTabPinkBackground"
-                      className="absolute inset-0 bg-[#E05286] rounded-full"
-                      transition={{ 
-                        type: "spring", 
-                        stiffness: 400, 
-                        damping: 24, 
-                        mass: 0.6,
-                        restDelta: 0.001 
-                      }}
-                    />
-                  )}
-                  <Icon 
-                    className={cn(
-                      "relative z-10 size-[22px] transition-colors duration-300",
-                      active 
-                        ? "text-white stroke-[2.5]" 
-                        : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 stroke-[2]"
-                    )} 
-                  />
+                  <Icon className={cn("size-[19px] transition-colors", active ? "stroke-[2.4]" : "stroke-[1.9]")} />
+                  <span className={cn("max-w-full truncate text-[10px] leading-none", active ? "font-semibold" : "font-medium")}>{tab.label}</span>
                 </motion.div>
               </button>
             );

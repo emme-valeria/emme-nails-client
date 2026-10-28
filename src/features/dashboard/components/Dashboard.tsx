@@ -43,25 +43,25 @@ export function Dashboard() {
     : null;
 
   return (
-    <div className="relative min-h-[calc(100vh-6rem)] w-full text-left font-sans -mt-2 sm:-mt-3 lg:-mt-4 bg-gradient-to-br from-[#FCF3F6] via-[#F8F9FA] to-[#F0F2F6] overflow-hidden flex flex-col m-0 p-0">
+    <div className="relative min-h-[calc(100vh-6rem)] w-full max-w-[1600px] mx-auto text-left font-sans -mt-2 sm:-mt-3 lg:mt-0 bg-gradient-to-br from-[#FCF3F6] via-[#F8F9FA] to-[#F0F2F6] overflow-hidden flex flex-col m-0 p-0 lg:rounded-[32px] lg:border lg:border-white/70 lg:shadow-[0_18px_60px_rgba(37,27,34,0.06)]">
       
       {/* Subtle background glow */}
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-pink-100/40 via-transparent to-transparent pointer-events-none z-0"></div>
 
       {/* HEADER SECTION */}
-      <div className="relative z-10 px-5 sm:px-8 pt-4 sm:pt-6 shrink-0 pb-8">
+      <div className="relative z-10 px-5 sm:px-8 lg:px-12 xl:px-16 pt-4 sm:pt-6 lg:pt-10 shrink-0 pb-8 lg:pb-12">
         
         {/* Mascot */}
-        <div className="absolute top-0 right-[-20px] sm:right-0 z-0 pointer-events-none">
+        <div className="absolute top-0 right-[-20px] sm:right-0 lg:right-10 xl:right-16 z-0 pointer-events-none">
           <img 
             src="/conejomanicura.png" 
             alt="Mascot" 
-            className="w-56 h-56 sm:w-64 sm:h-64 object-contain drop-shadow-xl"
+            className="w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 object-contain drop-shadow-xl"
           />
         </div>
 
         {/* Logo in header */}
-        <div className="relative z-10 flex items-center mt-3 sm:mt-4 mb-8">
+        <div className="relative z-10 flex items-center mt-3 sm:mt-4 mb-8 lg:mb-10">
           <h1 className="text-lg font-display tracking-tight font-extrabold flex items-center leading-none">
             <span className="text-[#E05286] mr-1">emme</span>
             <span className="text-[#1D1D1F] font-medium">studio</span>
@@ -69,8 +69,8 @@ export function Dashboard() {
         </div>
 
         {/* ENCABEZADO (Saludo Dinámico) */}
-        <div className="relative z-10 max-w-[75%] sm:max-w-[65%]">
-          <h1 className="text-[28px] sm:text-4xl md:text-[40px] font-display font-bold tracking-tight text-[#1D1D1F] leading-[1.15]">
+        <div className="relative z-10 max-w-[75%] sm:max-w-[65%] lg:max-w-[60%]">
+          <h1 className="text-[28px] sm:text-4xl md:text-[40px] lg:text-5xl xl:text-6xl font-display font-bold tracking-tight text-[#1D1D1F] leading-[1.15]">
             {nextAppointment && nextService 
               ? <>¡Nos vemos,<br />{clientFirstName}!</>
               : (
@@ -86,15 +86,15 @@ export function Dashboard() {
       </div>
 
       {/* BOTTOM SHEET CONTAINER */}
-      <div className="relative z-20 flex-1 bg-[#F8F9FA] rounded-t-[40px] px-5 sm:px-8 pt-8 pb-32 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] border-t border-white/60 mt-5 sm:mt-7 flex flex-col space-y-6">
+      <div className="relative z-20 flex-1 bg-[#F8F9FA] rounded-t-[32px] lg:rounded-[32px] px-5 sm:px-8 lg:px-10 xl:px-12 pt-8 lg:pt-10 pb-32 lg:pb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] lg:shadow-none border-t border-white/60 lg:border lg:border-white/70 mt-5 sm:mt-7 lg:mt-0 lg:mx-8 xl:mx-12 lg:mb-8 flex flex-col space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
         
         {/* SECCIÓN 1: ATAJOS RÁPIDOS */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:space-y-5">
           <h2 className="text-xl font-bold text-[#1D1D1F] tracking-tight px-1">
             ¿Cómo quieres agendar?
           </h2>
 
-          <div className="grid grid-cols-2 gap-4 items-stretch">
+          <div className="grid grid-cols-2 gap-4 lg:gap-5 items-stretch">
             {/* Card 1: Cotizar con IA */}
             <motion.div
               whileHover={{ y: -2 }}
@@ -103,7 +103,7 @@ export function Dashboard() {
                 triggerHapticFeedback(10);
                 navigate('/quotes/new');
               }}
-              className="bg-gradient-to-br from-[#FFECF0] to-[#FFD9E3] rounded-[2rem] p-6 sm:p-7 flex flex-col items-center text-center cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 h-full group"
+              className="premium-card rounded-3xl bg-[#F5D6E0] p-6 sm:p-7 lg:p-8 flex flex-col items-center text-center cursor-pointer hover:bg-[#F1C9D6] h-full group"
             >
               <img src="/camara_frontal.png" alt="Cámara" className="w-20 h-20 object-contain mb-2 drop-shadow-sm" />
               <h3 className="text-base font-bold text-[#1D1D1F] leading-tight mb-1.5">
@@ -122,7 +122,7 @@ export function Dashboard() {
                 triggerHapticFeedback(10);
                 navigate('/book/service');
               }}
-              className="bg-white rounded-[2rem] p-6 sm:p-7 flex flex-col items-center text-center cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 h-full group"
+              className="premium-card p-6 sm:p-7 lg:p-8 flex flex-col items-center text-center cursor-pointer h-full group"
             >
               <img src="/calendario_frontal.png" alt="Calendario" className="w-20 h-20 object-contain mb-2 drop-shadow-sm" />
               <h3 className="text-base font-bold text-[#1D1D1F] leading-tight mb-1.5">
@@ -138,7 +138,7 @@ export function Dashboard() {
         {/* SECCIÓN 2: PRÓXIMA CITA */}
         <div>
           {nextAppointment && nextService ? (
-            <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 overflow-hidden">
+            <div className="premium-card rounded-3xl p-6 sm:p-7 lg:p-8 overflow-hidden lg:sticky lg:top-8">
               <div className="relative z-10 flex items-center gap-4 sm:gap-5">
                 <div className="w-14 h-14 rounded-2xl bg-white border border-pink-50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-center shrink-0">
                   <Calendar className="size-6 text-[#E05286] stroke-[1.5]" />
@@ -171,13 +171,13 @@ export function Dashboard() {
                   triggerHapticFeedback(10);
                   navigate('/agenda');
                 }}
-                className="mt-5 w-full h-12 sm:h-14 rounded-full bg-gradient-to-r from-[#D84C7B] to-[#F26B9D] text-white font-bold text-sm sm:text-base flex items-center justify-center transition-all shadow-md active:scale-[0.98]"
+                className="mt-5 w-full h-12 sm:h-14 rounded-2xl bg-gradient-to-r from-[#D84C7B] to-[#F26B9D] text-white font-bold text-sm sm:text-base flex items-center justify-center transition-all shadow-md active:scale-[0.98]"
               >
                 Gestionar Cita
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-[2rem] p-6 sm:p-7 flex items-center gap-4 sm:gap-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60">
+            <div className="premium-card rounded-3xl p-6 sm:p-7 flex items-center gap-4 sm:gap-5">
               <div className="w-14 h-14 rounded-2xl bg-white border border-pink-50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-center shrink-0">
                 <Calendar className="size-6 text-[#E05286] stroke-[1.5]" />
               </div>

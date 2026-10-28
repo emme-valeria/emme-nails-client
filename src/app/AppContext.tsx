@@ -637,7 +637,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await googleSignIn();
       if (result) {
-        toast.success(`Google conectado como ${result.user.displayName || result.user.email}`);
+        toast.success(`Cuenta de demostración iniciada como ${result.user.displayName || result.user.email}`);
 
         // Link client account if email is available
         const userEmail = result.user.email?.toLowerCase().trim();
@@ -746,7 +746,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       setAppointments(updatedApts);
       toast.dismiss(toastId);
-      toast.success(`Google Calendar Sincronizado: ${successCount} citas procesadas.`);
+      toast.success(`Simulación local: ${successCount} citas preparadas para Google Calendar.`);
     } catch (err: any) {
       toast.dismiss(toastId);
       toast.error(`Error en la sincronización: ${err.message}`);
@@ -771,7 +771,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await exportAppointmentsToSpreadsheet(googleToken, sheetId, appointments, clients, services);
       await exportFinancesToSpreadsheet(googleToken, sheetId, appointments, services);
       toast.dismiss(toastId);
-      toast.success('¡Google Sheets sincronizado con éxito!');
+      toast.success('Fixture local: datos preparados para exportar a Google Sheets.');
     } catch (e: any) {
       toast.dismiss(toastId);
       toast.error(`Error al exportar: ${e.message}`);

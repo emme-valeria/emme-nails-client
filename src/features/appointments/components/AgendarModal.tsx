@@ -15,7 +15,7 @@ export function AgendarModal({
 }: AgendarModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-4 sm:p-6 overflow-hidden bg-background border-none shadow-2xl rounded-3xl outline-none max-h-[92vh] overflow-y-auto custom-scrollbar">
+      <DialogContent showCloseButton={false} className="max-w-3xl p-4 sm:p-6 overflow-hidden bg-background border-none shadow-2xl rounded-[32px] outline-none max-h-[92vh] overflow-y-auto custom-scrollbar">
         <DialogTitle className="sr-only">Agendar Cita</DialogTitle>
         <DirectBookingFlow 
           isModal
@@ -26,4 +26,3 @@ export function AgendarModal({
     </Dialog>
   );
 }
-

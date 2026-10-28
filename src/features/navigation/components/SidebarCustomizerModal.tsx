@@ -62,8 +62,8 @@ export function SidebarCustomizerModal() {
   };
 
   const accentColors: { id: SystemAccentColor; label: string; bgClass: string }[] = [
-    { id: 'rose', label: 'Rosa Emme', bgClass: 'bg-[#E05286]' },
-    { id: 'blue', label: 'Azul Apple', bgClass: 'bg-[#0071E3]' },
+    { id: 'rose', label: 'Rosa suave', bgClass: 'bg-[#F8B4BE]' },
+    { id: 'blue', label: 'Rosa Emme', bgClass: 'bg-[#E05286]' },
     { id: 'purple', label: 'Violeta', bgClass: 'bg-[#AF52DE]' },
     { id: 'orange', label: 'Naranja', bgClass: 'bg-[#FF9500]' },
     { id: 'emerald', label: 'Esmeralda', bgClass: 'bg-[#34C759]' },

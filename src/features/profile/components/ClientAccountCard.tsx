@@ -42,8 +42,8 @@ export function ClientAccountCard({ currentClient }: ClientAccountCardProps) {
         </div>
 
         {currentClient.isVip && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-800 text-xs font-black uppercase tracking-wider">
-            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs font-black uppercase tracking-wider">
+            <Star className="size-3.5 fill-purple-500 text-purple-500" />
             VIP Platinum
           </span>
         )}

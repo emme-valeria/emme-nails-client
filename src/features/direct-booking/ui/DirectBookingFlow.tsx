@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
+import type { Appointment as BookingAppointment } from '@/domain/appointments/entities/Appointment';
+import { AppointmentConfirmation, MOCK_APPOINTMENT_CONFIRMATION } from './AppointmentConfirmation';
 import { 
   Sparkles, Calendar, Clock, User, CheckCircle2, ChevronRight, 
   RotateCcw, DollarSign, Award, ShieldCheck, X, Wand2, Star, Check, 
@@ -523,7 +525,7 @@ interface DirectBookingFlowProps {
 
 export function DirectBookingFlow({ onSuccess, onCancel, isModal = false }: DirectBookingFlowProps) {
   const navigate = useNavigate();
-  const { clients, addAppointment } = useApp();
+  const { clients, profile, addAppointment } = useApp();
 
   // Active client
   const currentClient = clients[0] || { id: 'c1', name: 'Valeria Arriaza', phone: '+52 55 1234 5678' };
@@ -605,7 +607,7 @@ export function DirectBookingFlow({ onSuccess, onCancel, isModal = false }: Dire
   const [clientName, setClientName] = useState<string>(currentClient.name || 'Valeria Arriaza');
   const [clientPhone, setClientPhone] = useState<string>(currentClient.phone || '+52 55 1234 5678');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [createdAppointmentData, setCreatedAppointmentData] = useState<any | null>(null);
+  const [createdAppointmentData, setCreatedAppointmentData] = useState<BookingAppointment | null>(null);
 
   // Flags lógicos clave
   const isOnlyRemoval = selectedLook === 'removal';
@@ -904,36 +906,42 @@ export function DirectBookingFlow({ onSuccess, onCancel, isModal = false }: Dire
         catalogServiceId = extensionTech === 'acrylic' ? 'e2' : 'e1';
       }
 
-      const apt = {
+      const appointment: BookingAppointment = {
+        id: crypto.randomUUID(),
+        bookingType: 'direct_booking',
         clientId: currentClient.id,
+        clientName: clientName || currentClient.name,
         serviceId: catalogServiceId,
+        serviceTitle: fullServiceTitle,
+        staffId: selectedStaff.id === 'any' ? '' : selectedStaff.id,
+        staffName: selectedStaff.name,
         date: selectedDate,
-        startTime: selectedTimeSlot,
-        endTime: calculateEndTime(selectedTimeSlot, totalBlockedMinutes),
+        timeSlot: selectedTimeSlot,
+        durationMinutes: serviceDurationMinutes,
+        totalPrice: totalPriceMXN,
+        depositPaid: depositAmountMXN,
+        location: profile.address,
         status: 'confirmed' as const,
-        notes: notesArray.join(' • ')
+        createdAt: new Date().toISOString(),
       };
 
-      addAppointment(apt);
+      addAppointment({
+        clientId: appointment.clientId,
+        serviceId: appointment.serviceId,
+        date: appointment.date,
+        startTime: appointment.timeSlot,
+        endTime: calculateEndTime(appointment.timeSlot, totalBlockedMinutes),
+        status: appointment.status,
+        notes: notesArray.join(' • '),
+      });
 
       setIsSubmitting(false);
-      setCreatedAppointmentData({
-        ...apt,
-        totalPriceMXN,
-        serviceDurationMinutes,
-        totalBlockedMinutes,
-        depositAmountMXN,
-        remainingBalanceMXN,
-        depositPercentage,
-        staffName: selectedStaff.name,
-        serviceName: fullServiceTitle
-      });
+      setCreatedAppointmentData(appointment);
 
       toast.success('¡Cita agendada con éxito!', {
         description: `${fullServiceTitle} • ${selectedDate} a las ${selectedTimeSlot} hrs.`
       });
 
-      if (onSuccess) onSuccess();
     }, 600);
   };
 
@@ -957,141 +965,18 @@ export function DirectBookingFlow({ onSuccess, onCancel, isModal = false }: Dire
     }
   };
 
-  // SUCCESS SCREEN - Unboxed with comprehensive breakdown & notifications
+  // La confirmación queda abierta hasta que la clienta la cierre.
   if (createdAppointmentData) {
-    const formattedDateFull = format(new Date(`${selectedDate}T12:00:00`), "EEEE d 'de' MMMM, yyyy", { locale: es });
-    
-    // WhatsApp pre-filled message
-    const whatsappMessage = encodeURIComponent(
-      `*Confirmación de Cita - Nail Studio*\n\n` +
-      `*Cliente:* ${clientName}\n` +
-      `*Servicio:* ${fullServiceTitle}\n` +
-      `*Silueta:* ${selectedShapeObj.label}\n` +
-      `*Acabado:* ${selectedFinishObj.label}\n` +
-      `*Color:* ${selectedColorName}\n` +
-      `${selectedExtras.length > 0 ? `*Extras:* ${selectedExtras.length} adicional(es)\n` : ''}` +
-      `*Especialista:* ${selectedStaff.name}\n` +
-      `*Fecha:* ${formattedDateFull}\n` +
-      `*Horario:* ${selectedTimeSlot} a ${calculateEndTime(selectedTimeSlot, serviceDurationMinutes)} hrs\n` +
-      `*Bioseguridad:* Buffer de sanitización de 15m garantizado\n\n` +
-      `*Inversión Total:* $${totalPriceMXN} MXN\n` +
-      `*Anticipo:* $${depositAmountMXN} MXN (${depositPercentage}%)\n` +
-      `*Saldo pendiente en salón:* $${remainingBalanceMXN} MXN\n\n` +
-      `¡Nos vemos pronto!`
-    );
-
     return (
-      <div className="w-full max-w-xl mx-auto py-6 sm:py-10 text-center relative">
-        {/* Dynamic Ambient Color Orbs */}
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none -z-10" />
-        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-pink-400/15 blur-3xl pointer-events-none -z-10" />
-
-        <div className="liquid-glass rounded-[32px] p-6 sm:p-9 relative overflow-hidden backdrop-blur-2xl text-center space-y-6 shadow-2xl">
-          <div className="size-16 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-xs">
-            <CheckCircle2 className="size-8 stroke-[2.5]" />
-          </div>
-
-          <div className="space-y-1.5">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider inline-block">
-              Cita Reservada y Confirmada
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              ¡Tu cita está registrada en la agenda!
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-              Te esperamos el <strong className="text-foreground">{formattedDateFull}</strong> a las <strong className="text-foreground">{selectedTimeSlot} hrs</strong> con <strong className="text-foreground">{selectedStaff.name}</strong>.
-            </p>
-          </div>
-
-          {/* Detailed Breakdown Card in Liquid Glass Sub */}
-          <div className="liquid-glass-sub p-4 sm:p-5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] text-xs text-foreground space-y-2.5 text-left max-w-md mx-auto shadow-xs">
-            <div className="flex justify-between items-center pb-2 border-b border-black/[0.06] dark:border-white/[0.08]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Desglose de la Reserva</span>
-              <span className="text-[10.5px] font-bold text-primary">ID #{Math.floor(100000 + Math.random() * 900000)}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Servicio principal:</span>
-              <span className="font-semibold text-foreground">{fullServiceTitle}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Silueta y Acabado:</span>
-              <span className="font-semibold text-foreground">{selectedShapeObj.label} · {selectedFinishObj.label}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tonalidad:</span>
-              <span className="font-semibold text-foreground">{selectedColorName}</span>
-            </div>
-
-            {selectedExtras.length > 0 && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Extras incluidos:</span>
-                <span className="font-semibold text-primary">{selectedExtras.length} adicional(es) (+${extrasTotal} MXN)</span>
-              </div>
-            )}
-
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tiempo neto en cabina:</span>
-              <span className="font-bold text-foreground">{formatMinutesHuman(serviceDurationMinutes)}</span>
-            </div>
-
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-              <span className="flex items-center gap-1 font-semibold">
-                <ShieldCheck className="size-3.5 stroke-[2.25]" />
-                Buffer de Sanitización:
-              </span>
-              <span className="font-bold">+15 min (Incluido)</span>
-            </div>
-
-            <div className="flex justify-between pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
-              <span className="text-muted-foreground font-medium">Total del servicio:</span>
-              <span className="font-bold text-foreground text-sm">${totalPriceMXN} MXN</span>
-            </div>
-
-            <div className="flex justify-between text-primary">
-              <span className="font-semibold">Anticipo de Garantía ({depositPercentage}%):</span>
-              <span className="font-bold text-sm">${depositAmountMXN} MXN</span>
-            </div>
-
-            <div className="flex justify-between text-muted-foreground text-[11px]">
-              <span>Saldo a liquidar en salón:</span>
-              <span className="font-bold text-foreground">${remainingBalanceMXN} MXN</span>
-            </div>
-          </div>
-
-          {/* Action Buttons: WhatsApp and Navigation */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5 max-w-md mx-auto">
-            <a
-              href={`https://wa.me/?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto flex-1 h-11 px-6 rounded-full apple-button bg-emerald-600 hover:brightness-105 font-bold text-xs text-white flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-600/25 transition-all"
-            >
-              <Smartphone className="size-4 stroke-[2.25]" />
-              <span>Enviar a WhatsApp</span>
-            </a>
-
-            <button
-              type="button"
-              onClick={() => navigate('/agenda')}
-              className="w-full sm:w-auto flex-1 h-11 px-6 rounded-full apple-button bg-primary hover:brightness-105 font-bold text-xs text-white flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-primary/25 transition-all"
-            >
-              <span>Ver en Agenda</span>
-              <ArrowRight className="size-4 stroke-[2.25]" />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate('/inicio')}
-            className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-block"
-          >
-            Volver a la Pantalla de Inicio
-          </button>
-        </div>
-      </div>
+      <AppointmentConfirmation
+        appointment={createdAppointmentData ?? MOCK_APPOINTMENT_CONFIRMATION}
+        open
+        onClose={() => {
+          if (onSuccess) onSuccess();
+          else navigate('/inicio');
+        }}
+        onViewAppointment={(appointment) => navigate('/agenda', { state: { appointmentId: appointment.id } })}
+      />
     );
   }
 

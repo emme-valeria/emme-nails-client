@@ -14,6 +14,37 @@ const PORT = 3000;
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+// Expo Web runs on a separate Metro port during development. Allow local same-host
+// origins so its public API requests can reach this server without opening CORS broadly.
+app.use("/api", (req, res, next) => {
+  const origin = req.get("origin");
+  if (!origin) return next();
+
+  try {
+    const originUrl = new URL(origin);
+    const requestHost = req.hostname.toLowerCase();
+    const originHost = originUrl.hostname.toLowerCase();
+    const isLoopback = ["localhost", "127.0.0.1", "::1"].includes(originHost);
+    const configuredOrigins = (process.env.EXPO_PUBLIC_API_ALLOWED_ORIGINS || "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const isConfigured = configuredOrigins.includes(origin);
+
+    if (originHost === requestHost || isLoopback || isConfigured) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+      if (req.method === "OPTIONS") return res.sendStatus(204);
+    }
+  } catch {
+    // Ignore malformed Origin values and let the route handle the request.
+  }
+
+  next();
+});
+
 // Lazy/safe Gemini AI client initialization
 function getGeminiClient(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
@@ -238,11 +269,11 @@ function getLocalNailAnalysisFallback(userNotes?: string) {
   }
 
   const extras = [
-    { name: "Efecto Glazed / Chrome", estimatedCost: 150 },
-    { name: "French Tips Mano Alzada", estimatedCost: 100 },
+    { name: "Efecto Glazed / Chrome", estimatedCost: 90, quantity: 5 },
+    { name: "French Tips Mano Alzada", estimatedCost: 80, quantity: 10 },
   ];
   if (notesLower.includes("cristal") || notesLower.includes("swarovski")) {
-    extras.push({ name: "Cristalería Swarovski / 3D", estimatedCost: 120 });
+    extras.push({ name: "Cristalería Swarovski / 3D", estimatedCost: 8, quantity: 4 });
   }
 
   const artPrice = extras.reduce((acc, curr) => acc + curr.estimatedCost, 0);
@@ -265,6 +296,7 @@ function getLocalNailAnalysisFallback(userNotes?: string) {
     description: "Diseño elegante en tonos nude con acabado aperlado glazed chrome y líneas finas.",
     stylistTip: "Recomendamos estructura en Soft Gel para mayor ligereza y durabilidad superior a 3 semanas.",
     fallback: true,
+    error: "Gemini no está disponible. Verifica que GEMINI_API_KEY esté configurada en el servidor y vuelve a intentar.",
   };
 }
 
@@ -273,11 +305,11 @@ app.post("/api/gemini/analyze-nail-image", async (req, res) => {
   try {
     const { imageBase64, mimeType = "image/jpeg", userNotes = "" } = req.body;
 
-    if (!imageBase64 || typeof imageBase64 !== "string") {
-      return res.status(400).json({ error: "La imagen en formato base64 es requerida." });
+    if ((!imageBase64 || typeof imageBase64 !== "string") && !String(userNotes).trim()) {
+      return res.status(400).json({ error: "Agrega una foto o describe el diseño para cotizarlo." });
     }
 
-    const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+]+;base64,/, "");
+    const cleanBase64 = typeof imageBase64 === "string" ? imageBase64.replace(/^data:image\/[a-zA-Z0-9+]+;base64,/, "") : "";
 
     const ai = getGeminiClient();
     if (!ai) {
@@ -301,7 +333,7 @@ SI SE DETECTAN UÑAS (nailsDetected = true), GENERA LA COTIZACIÓN COMPLETA:
 5. "detectedColors": Lista de los 2 a 4 colores principales detectados en la foto.
 6. "detectedShape": Forma visual sugerida en la foto: "Almendra", "Cuadrada", "Coffin", "Stiletto", "Ovalada", o "Natural".
 7. "detectedLength": Largo sugerido en la foto: "Corto (S)", "Medio (M)", "Largo (L)", o "Extra Largo (XL)".
-8. "detectedExtras": Lista de elementos o técnicas adicionales identificadas con costo estimado en MXN.
+8. "detectedExtras": Lista de elementos o técnicas adicionales identificadas; para cada una incluye "name", "estimatedCost" como precio unitario orientativo MXN y "quantity" como cantidad de uñas/piezas (1 a 10).
 9. "estimatedDurationMinutes": Tiempo estimado total en cabina (entre 45 y 120 minutos).
 10. "basePrice": Precio base de la estructura/manicura en MXN (ej: entre $420 y $890 MXN).
 11. "artPrice": Precio acumulado del arte y decoración en MXN (ej: entre $100 y $450 MXN).
@@ -309,18 +341,17 @@ SI SE DETECTAN UÑAS (nailsDetected = true), GENERA LA COTIZACIÓN COMPLETA:
 13. "description": Explicación amigable en español dirigida a la clienta resumiendo lo que se identificó en su foto.
 14. "stylistTip": Un consejo profesional de cuidado o recomendación de nuestras manicuristas master.
 
-${userNotes ? `Notas adicionales de la clienta: "${userNotes}"` : ""}`;
+${userNotes ? `Notas adicionales de la clienta: "${userNotes}". Si no se adjunta imagen, usa la descripción para inferir uñasDetected=true cuando describe claramente un diseño de uñas, y devuelve una cotización aproximada editable.` : ""}`;
 
-    const imagePart = {
+    const imagePart = cleanBase64 ? {
       inlineData: {
         mimeType: mimeType || "image/jpeg",
         data: cleanBase64,
       },
-    };
+    } : null;
 
-    const textPart = {
-      text: promptText,
-    };
+    const textPart = { text: promptText };
+    const promptParts = imagePart ? [imagePart, textPart] : [textPart];
 
     const candidateModels = ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"];
 
@@ -332,7 +363,7 @@ ${userNotes ? `Notas adicionales de la clienta: "${userNotes}"` : ""}`;
 
         const generatePromise = ai.models.generateContent({
           model: modelName,
-          contents: { parts: [imagePart, textPart] },
+          contents: { parts: promptParts },
           config: {
             responseMimeType: "application/json",
             temperature: 0.1,
@@ -374,8 +405,9 @@ ${userNotes ? `Notas adicionales de la clienta: "${userNotes}"` : ""}`;
                   items: {
                     type: Type.OBJECT,
                     properties: {
-                      name: { type: Type.STRING },
-                      estimatedCost: { type: Type.NUMBER },
+                        name: { type: Type.STRING },
+                        estimatedCost: { type: Type.NUMBER },
+                        quantity: { type: Type.NUMBER, description: "Cantidad aproximada de uñas o piezas en las que aparece este detalle." },
                     },
                     required: ["name", "estimatedCost"],
                   },

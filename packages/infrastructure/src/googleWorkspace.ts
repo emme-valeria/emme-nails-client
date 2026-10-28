@@ -1,343 +1,121 @@
-import { toast } from 'sonner';
-
+/**
+ * Adaptadores de Google Workspace en modo fixture.
+ * Mantienen los contratos existentes y almacenan las simulaciones en memoria;
+ * no hacen solicitudes a Google Calendar ni Google Sheets.
+ */
 export interface CalendarSyncResult {
   googleEventId?: string;
   status: 'created' | 'updated' | 'deleted' | 'error';
   error?: string;
 }
 
-// Get the local timezone
-const getLocalTimeZone = () => {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid';
-};
+type DemoSpreadsheet = { title: string; tabs: Record<string, unknown[][]> };
+const demoSpreadsheets = new Map<string, DemoSpreadsheet>();
 
-/**
- * Creates, updates, or deletes a Google Calendar event for an appointment.
- */
 export async function syncAppointmentToCalendar(
-  accessToken: string,
+  _accessToken: string,
   appointment: any,
-  client: any,
-  service: any
+  _client: any,
+  _service: any,
 ): Promise<CalendarSyncResult> {
-  const timeZone = getLocalTimeZone();
-  const dateStr = appointment.date.split('T')[0];
-  const startISO = `${dateStr}T${appointment.startTime}:00`;
-  const endISO = `${dateStr}T${appointment.endTime}:00`;
-
-  const isCancelled = appointment.status === 'cancelled';
-  const googleEventId = appointment.googleEventId;
-
-  // Handle Deletion for Cancelled appointments if they already exist in Google Calendar
-  if (isCancelled) {
-    if (!googleEventId) {
-      return { status: 'deleted' };
-    }
-    try {
-      const res = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      if (res.status === 204 || res.status === 404) {
-        return { status: 'deleted' };
-      }
-      const data = await res.json();
-      throw new Error(data.error?.message || 'Error deleting event');
-    } catch (err: any) {
-      console.error('Error deleting calendar event:', err);
-      return { status: 'error', error: err.message };
-    }
-  }
-
-  // Build event pay load
-  const eventPayload = {
-    summary: `✨ Cita Nails: ${client?.name || 'Cliente'} - ${service?.name || 'Uñas'}`,
-    description: `💅 **Estudio EmmeNails - Gestión de Cita**\n\n🔹 **Cliente:** ${client?.name || 'No especificado'}\n🔹 **Teléfono:** ${client?.phone || 'No especificado'}\n🔹 **Servicio:** ${service?.name || 'No especificado'}\n🔹 **Precio:** $${service?.price || '0'}\n🔹 **Duración:** ${service?.duration || '0'} min\n🔹 **Notas:** ${appointment.notes || 'Ninguna'}\n\n*Sincronizado automáticamente desde EmmeNails Studio Manager.*`,
-    start: {
-      dateTime: new Date(startISO).toISOString(),
-      timeZone: timeZone,
-    },
-    end: {
-      dateTime: new Date(endISO).toISOString(),
-      timeZone: timeZone,
-    },
-    colorId: appointment.status === 'completed' ? '10' : (appointment.status === 'confirmed' ? '5' : '6'), // Green for completed, yellow/blue for rest
-    status: 'confirmed',
+  if (appointment.status === 'cancelled') return { status: 'deleted' };
+  return {
+    googleEventId: appointment.googleEventId || `demo-calendar-event-${appointment.id}`,
+    status: appointment.googleEventId ? 'updated' : 'created',
   };
-
-  try {
-    const url = googleEventId
-      ? `https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}`
-      : `https://www.googleapis.com/calendar/v3/calendars/primary/events`;
-
-    const method = googleEventId ? 'PUT' : 'POST';
-
-    const res = await fetch(url, {
-      method: method,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(eventPayload),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      // If event was previously deleted on Google Calendar but we stored the id, re-create it by calling without ID
-      if (googleEventId && (res.status === 404 || res.status === 410)) {
-        console.warn('Event not found on Google. Re-creating as a new event...');
-        return syncAppointmentToCalendar(accessToken, { ...appointment, googleEventId: undefined }, client, service);
-      }
-      throw new Error(errorData.error?.message || 'Error syncing event');
-    }
-
-    const createdEvent = await res.json();
-    return {
-      googleEventId: createdEvent.id,
-      status: googleEventId ? 'updated' : 'created',
-    };
-  } catch (err: any) {
-    console.error('Error syncing calendar event:', err);
-    return { status: 'error', error: err.message };
-  }
 }
 
-/**
- * Creates a beautiful spreadsheet on Google Sheets or retrieves current and writes general business data.
- */
-export async function createSpreadsheet(accessToken: string, title: string): Promise<string> {
-  try {
-    const res = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        properties: {
-          title: title,
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error?.message || 'Error creating sheet');
-    }
-
-    const data = await res.json();
-    return data.spreadsheetId;
-  } catch (err: any) {
-    console.error('Error creating spreadsheet:', err);
-    throw err;
-  }
+export async function createSpreadsheet(_accessToken: string, title: string): Promise<string> {
+  const id = `demo-sheet-${Date.now()}`;
+  demoSpreadsheets.set(id, { title, tabs: {} });
+  return id;
 }
 
-/**
- * Prepares sheets (tabs) in spreadsheet if they don't exist.
- */
-export async function setupSpreadsheetTabs(accessToken: string, spreadsheetId: string): Promise<void> {
-  try {
-    // Check sheets that exist in the spreadsheet
-    const metadataRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    
-    if (!metadataRes.ok) throw new Error('Error retrieving spreadsheet status');
-    const metadata = await metadataRes.json();
-    const sheets = metadata.sheets || [];
-    const sheetTitles = sheets.map((s: any) => s.properties.title);
-
-    const neededTabs = ['Citas y Agenda', 'Listado de Clientas', 'Resumen Financiero'];
-    const requests: any[] = [];
-
-    neededTabs.forEach((tab) => {
-      if (!sheetTitles.includes(tab)) {
-        requests.push({
-          addSheet: {
-            properties: {
-              title: tab,
-              gridProperties: {
-                frozenRowCount: 1,
-              },
-            },
-          },
-        });
-      }
-    });
-
-    if (requests.length > 0) {
-      const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ requests }),
-      });
-      if (!res.ok) {
-        console.warn('Warn: Could not create some sheets. Maybe already exist.');
-      }
-    }
-  } catch (err) {
-    console.error('Error ensuring sheets tabs exist:', err);
-  }
+export async function setupSpreadsheetTabs(_accessToken: string, spreadsheetId: string): Promise<void> {
+  const spreadsheet = demoSpreadsheets.get(spreadsheetId) || { title: 'Emme Studio · Demo local', tabs: {} };
+  ['Citas y Agenda', 'Listado de Clientas', 'Resumen Financiero'].forEach((name) => {
+    spreadsheet.tabs[name] ||= [];
+  });
+  demoSpreadsheets.set(spreadsheetId, spreadsheet);
 }
 
-/**
- * Writes raw structured rows to Google Sheets range.
- */
 export async function writeSheetValues(
-  accessToken: string,
+  _accessToken: string,
   spreadsheetId: string,
   tabName: string,
-  values: any[][]
+  values: unknown[][],
 ): Promise<void> {
-  try {
-    // 1. Clear current cells
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A:Z:clear`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    // 2. Put new cells
-    const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A1?valueInputOption=USER_ENTERED`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          range: `${tabName}!A1`,
-          majorDimension: 'ROWS',
-          values: values,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error?.message || 'Error updating sheets values');
-    }
-  } catch (err: any) {
-    console.error(`Error updating sheet ${tabName}:`, err);
-    throw err;
-  }
+  const spreadsheet = demoSpreadsheets.get(spreadsheetId) || { title: 'Emme Studio · Demo local', tabs: {} };
+  spreadsheet.tabs[tabName] = values;
+  demoSpreadsheets.set(spreadsheetId, spreadsheet);
 }
 
-/**
- * Quick export of clients to Google Sheets.
- */
 export async function exportClientsToSpreadsheet(
   accessToken: string,
   spreadsheetId: string,
-  clients: any[]
+  clients: any[],
 ): Promise<void> {
-  const headers = [
-    'ID Clienta',
-    'Nombre',
-    'Teléfono',
-    'Email',
-    'VIP?',
-    'Alergias / Piel',
-    'Preferencias',
-    'Cumpleaños',
-  ];
-
-  const rows = clients.map((c) => [
-    c.id.slice(0, 8),
-    c.name || '',
-    c.phone || '',
-    c.email || '',
-    c.isVip ? 'SÍ' : 'NO',
-    c.allergies || 'Ninguna',
-    c.preferences || 'Ninguna',
-    c.birthday || 'No registrado',
+  const headers = ['ID Clienta', 'Nombre', 'Teléfono', 'Email', 'VIP?', 'Alergias / Piel', 'Preferencias', 'Cumpleaños'];
+  const rows = clients.map((client) => [
+    client.id?.slice(0, 8) || '',
+    client.name || '',
+    client.phone || '',
+    client.email || '',
+    client.isVip ? 'SÍ' : 'NO',
+    client.allergies || 'Ninguna',
+    client.preferences || 'Ninguna',
+    client.birthday || 'No registrado',
   ]);
-
-  const allValues = [headers, ...rows];
-  await writeSheetValues(accessToken, spreadsheetId, 'Listado de Clientas', allValues);
+  await writeSheetValues(accessToken, spreadsheetId, 'Listado de Clientas', [headers, ...rows]);
 }
 
-/**
- * Quick export of appointments list.
- */
 export async function exportAppointmentsToSpreadsheet(
   accessToken: string,
   spreadsheetId: string,
   appointments: any[],
   clients: any[],
-  services: any[]
+  services: any[],
 ): Promise<void> {
-  const headers = [
-    'ID Cita',
-    'Fecha',
-    'Hora Inicio',
-    'Hora Fin',
-    'Clienta',
-    'Servicio',
-    'Monto',
-    'Estado',
-    'Notas',
-  ];
-
-  const clientMap = new Map(clients.map(c => [c.id, c.name]));
-  const serviceMap = new Map(services.map(s => [s.id, s]));
-
-  const rows = appointments.map((a) => {
-    const s = serviceMap.get(a.serviceId);
+  const headers = ['ID Cita', 'Fecha', 'Hora Inicio', 'Hora Fin', 'Clienta', 'Servicio', 'Monto', 'Estado', 'Notas'];
+  const clientsById = new Map(clients.map((client) => [client.id, client.name]));
+  const servicesById = new Map(services.map((service) => [service.id, service]));
+  const rows = appointments.map((appointment) => {
+    const service = servicesById.get(appointment.serviceId);
     return [
-      a.id.slice(0, 8),
-      a.date.split('T')[0],
-      a.startTime,
-      a.endTime,
-      clientMap.get(a.clientId) || 'Desconocido',
-      s?.name || 'Desconocido',
-      s?.price ? `$${s.price}` : '$0',
-      a.status.toUpperCase(),
-      a.notes || '',
+      appointment.id?.slice(0, 8) || '',
+      appointment.date?.split('T')[0] || '',
+      appointment.startTime || '',
+      appointment.endTime || '',
+      clientsById.get(appointment.clientId) || 'Desconocido',
+      service?.name || 'Desconocido',
+      service?.price ? `$${service.price}` : '$0',
+      String(appointment.status || '').toUpperCase(),
+      appointment.notes || '',
     ];
   });
-
-  const allValues = [headers, ...rows];
-  await writeSheetValues(accessToken, spreadsheetId, 'Citas y Agenda', allValues);
+  await writeSheetValues(accessToken, spreadsheetId, 'Citas y Agenda', [headers, ...rows]);
 }
 
-/**
- * Export and sync beautiful complete dashboard KPIs to Google Sheets.
- */
 export async function exportFinancesToSpreadsheet(
   accessToken: string,
   spreadsheetId: string,
   appointments: any[],
-  services: any[]
+  services: any[],
 ): Promise<void> {
-  const serviceMap = new Map(services.map(s => [s.id, s]));
-
-  // Calculate metrics
-  const completedApts = appointments.filter(a => a.status === 'completed');
-  const totalSales = completedApts.reduce((sum, a) => sum + (serviceMap.get(a.serviceId)?.price || 0), 0);
-  const averageTicket = completedApts.length > 0 ? (totalSales / completedApts.length).toFixed(2) : '0';
-  
-  const headers = ['Métrica del Estudio', 'Valor Sincronizado'];
-  const values = [
-    headers,
-    ['Total Facturado (Citas Completadas)', `$${totalSales}`],
-    ['Total de Citas Atendidas', completedApts.length],
-    ['Ticket Promedio por Cita', `$${averageTicket}`],
-    ['Total Citas de Agenda (Histórico)', appointments.length],
-    ['Citas Pendientes', appointments.filter(a => a.status === 'pending').length],
-    ['Citas Confirmadas en Espera', appointments.filter(a => a.status === 'confirmed').length],
-    ['Citas Canceladas', appointments.filter(a => a.status === 'cancelled').length],
-    ['Última Sincronización', new Date().toLocaleString()],
+  const servicesById = new Map(services.map((service) => [service.id, service]));
+  const completed = appointments.filter((appointment) => appointment.status === 'completed');
+  const totalSales = completed.reduce((total, appointment) => total + (servicesById.get(appointment.serviceId)?.price || 0), 0);
+  const averageTicket = completed.length ? (totalSales / completed.length).toFixed(2) : '0';
+  const rows = [
+    ['Métrica del Estudio', 'Valor de demostración'],
+    ['Total facturado (citas completadas)', `$${totalSales}`],
+    ['Citas atendidas', completed.length],
+    ['Ticket promedio', `$${averageTicket}`],
+    ['Citas del historial', appointments.length],
+    ['Citas pendientes', appointments.filter((appointment) => appointment.status === 'pending').length],
+    ['Citas confirmadas', appointments.filter((appointment) => appointment.status === 'confirmed').length],
+    ['Citas canceladas', appointments.filter((appointment) => appointment.status === 'cancelled').length],
+    ['Generado localmente', new Date().toLocaleString()],
   ];
-
-  await writeSheetValues(accessToken, spreadsheetId, 'Resumen Financiero', values);
+  await writeSheetValues(accessToken, spreadsheetId, 'Resumen Financiero', rows);
 }

@@ -293,8 +293,8 @@ export function ProfileView() {
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{formData.email}</p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-400/15 text-amber-800 dark:text-amber-300">
-                    <Star className="size-3 fill-amber-500 text-amber-500" />
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
+                    <Star className="size-3 fill-purple-500 text-purple-500" />
                     <span>Clienta VIP</span>
                   </span>
                   <span className="text-[10px] font-semibold text-muted-foreground">

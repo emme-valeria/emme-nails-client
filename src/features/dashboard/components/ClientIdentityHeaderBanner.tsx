@@ -235,7 +235,7 @@ export function ClientIdentityHeaderBanner() {
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-bold text-[#1D1D1F]">{c.name}</p>
                           {c.isVip && (
-                            <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">
+                            <span className="text-[9px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-full border border-purple-200">
                               VIP
                             </span>
                           )}

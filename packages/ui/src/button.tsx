@@ -4,11 +4,11 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@emme/ui/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-[14px] font-semibold tracking-tight whitespace-nowrap transition-all duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] outline-none select-none focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-2xl border border-transparent bg-clip-padding text-[14px] font-semibold tracking-tight whitespace-nowrap transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] outline-none select-none focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5",
   {
     variants: {
       variant: {
-        default: "bg-primary text-white shadow-[0_8px_24px_rgba(0,113,227,0.25)] border border-white/20 hover:brightness-105 hover:shadow-[0_12px_28px_rgba(0,113,227,0.32)]",
+        default: "bg-primary text-white shadow-[0_8px_24px_rgba(224,82,134,0.25)] border border-white/20 hover:brightness-105 hover:shadow-[0_12px_28px_rgba(224,82,134,0.32)]",
         outline:
           "border border-white/40 dark:border-white/10 bg-white/80 dark:bg-white/[0.08] text-[#1D1D1F] dark:text-white shadow-[0_4px_16px_rgba(0,0,0,0.04)] backdrop-blur-md hover:bg-white dark:hover:bg-white/[0.12]",
         secondary:
@@ -23,10 +23,10 @@ const buttonVariants = cva(
       },
       size: {
         default:
-          "min-h-[44px] h-12 gap-2.5 px-6 rounded-full text-sm",
-        xs: "min-h-[36px] h-9 gap-1.5 px-3.5 text-xs rounded-full font-bold",
-        sm: "min-h-[44px] h-11 gap-2 px-4.5 text-xs rounded-full font-semibold",
-        lg: "min-h-[48px] h-14 gap-3 px-8 text-base rounded-full font-bold",
+          "min-h-[44px] h-12 gap-2.5 px-6 rounded-2xl text-sm",
+        xs: "min-h-[36px] h-9 gap-1.5 px-3.5 text-xs rounded-xl font-bold",
+        sm: "min-h-[44px] h-11 gap-2 px-4.5 text-xs rounded-xl font-semibold",
+        lg: "min-h-[48px] h-14 gap-3 px-8 text-base rounded-2xl font-bold",
         icon: "min-h-[44px] min-w-[44px] size-11 rounded-full",
         "icon-xs": "min-h-[36px] min-w-[36px] size-9 rounded-full",
         "icon-sm": "min-h-[44px] min-w-[44px] size-10 rounded-full",

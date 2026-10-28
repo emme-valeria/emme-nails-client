@@ -39,6 +39,7 @@ import {
   GeminiNailImageAnalysis 
 } from '@/shared/services/geminiService';
 import { optimizeImageForAI } from '@/shared/utils/imageOptimizer';
+import { EmmeCameraScanFlow } from './EmmeCameraScanFlow';
 
 export type PhotoVisualStep = 'step-image' | 'step-customize' | 'step-shape' | 'step-size' | 'step-removal' | 'step-summary';
 
@@ -162,6 +163,7 @@ export function NailPhotoVisualFlow({
   const [selectedShape, setSelectedShape] = useState<NailShape>(initialShape);
   const [selectedLength, setSelectedLength] = useState<NailLength>(initialLength);
   const [selectedRemoval, setSelectedRemoval] = useState<RemovalOptionType>(initialRemoval);
+  const [useCameraFlow, setUseCameraFlow] = useState(true);
 
   // Trigger Gemini Analysis when image changes
   const runGeminiImageAnalysis = async (imgSource: string | File, title?: string) => {
@@ -238,12 +240,12 @@ export function NailPhotoVisualFlow({
     }
   };
 
-  // Run initial analysis on mount ONLY if an image was provided
+  // The camera flow owns initial image analysis; only analyze here in classic mode.
   useEffect(() => {
-    if (selectedImageUrl) {
+    if (selectedImageUrl && !useCameraFlow && currentStep === 'step-image') {
       runGeminiImageAnalysis(selectedImageUrl);
     }
-  }, []);
+  }, [selectedImageUrl, useCameraFlow, currentStep]);
 
   // Step metadata: 3-step streamlined flow
   const stepsList = [
@@ -261,8 +263,8 @@ export function NailPhotoVisualFlow({
 
   // Calculate pricing transparently using Gemini insights + user selections
   const pricing = useMemo(() => {
-    const basePrice = geminiAnalysis?.basePrice || 420;
-    const artPrice = geminiAnalysis?.artPrice || 80;
+    const basePrice = geminiAnalysis?.basePrice ?? 420;
+    const artPrice = geminiAnalysis?.artPrice ?? 80;
     let baseDuration = geminiAnalysis?.estimatedDurationMinutes || 75;
 
     // Length extra
@@ -359,8 +361,76 @@ export function NailPhotoVisualFlow({
     }
   };
 
-  return (
-    <div className={cn('w-full max-w-2xl mx-auto space-y-6 text-left', className)}>
+    if (useCameraFlow && currentStep === 'step-image') {
+      return (
+        <div className={cn('w-full max-w-md mx-auto space-y-4 text-left', className)}>
+          <EmmeCameraScanFlow
+            prefilledImageUrl={selectedImageUrl || undefined}
+            onCancel={() => {
+              if (onCancel) onCancel();
+              else setUseCameraFlow(false);
+            }}
+            onProceedToBooking={(payload) => {
+              if (payload.imageUrl) setSelectedImageUrl(payload.imageUrl);
+              if (payload.analysis) setGeminiAnalysis(payload.analysis);
+              let resolvedShape = selectedShape;
+              let resolvedLength = selectedLength;
+              if (payload.shape) {
+                const s = payload.shape.toLowerCase();
+                if (s.includes('almend') || s.includes('almond')) resolvedShape = 'almond';
+                else if (s.includes('coffin')) resolvedShape = 'coffin';
+                else if (s.includes('cuadr')) resolvedShape = 'square';
+                else if (s.includes('oval')) resolvedShape = 'oval';
+                else if (s.includes('stiletto')) resolvedShape = 'stiletto';
+                else if (s.includes('squoval')) resolvedShape = 'squoval';
+                setSelectedShape(resolvedShape);
+              }
+              if (payload.length) {
+                const l = payload.length.toLowerCase();
+                if (l.includes('corto') || l.includes('(s)')) resolvedLength = 'short';
+                else if (l.includes('medio') || l.includes('(m)')) resolvedLength = 'medium';
+                else if (l.includes('extra') || l.includes('(xl)')) resolvedLength = 'xl';
+                else if (l.includes('largo') || l.includes('(l)')) resolvedLength = 'long';
+                setSelectedLength(resolvedLength);
+              }
+
+              const bookingData = {
+                imageUrl: payload.imageUrl,
+                shape: resolvedShape,
+                length: resolvedLength,
+                removal: selectedRemoval,
+                totalPriceMXN: payload.totalPrice,
+                depositMXN: Math.round(payload.totalPrice * 0.25),
+                durationMins: payload.durationMins,
+                geminiAnalysis: payload.analysis,
+              };
+
+              if (onProceedToAvailability) {
+                onProceedToAvailability(bookingData);
+              } else if (onCompleteBooking) {
+                onCompleteBooking(bookingData);
+              } else {
+                setUseCameraFlow(false);
+                setCurrentStep('step-summary');
+              }
+            }}
+          />
+
+          <div className="text-center pt-1">
+            <button
+              type="button"
+              onClick={() => setUseCameraFlow(false)}
+              className="text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors cursor-pointer"
+            >
+              ¿Prefieres el modo clásico de carga de archivo? Haz clic aquí
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={cn('w-full max-w-2xl mx-auto space-y-6 text-left', className)}>
       
       {/* 1. Header & Step Progress - Fluid, Aesthetic & Interactive */}
       <div className="space-y-4 pb-2">
@@ -929,5 +999,3 @@ export function NailPhotoVisualFlow({
     </div>
   );
 }
-
-

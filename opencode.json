@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "mobbin": {
+        "type": "remote",
+        "url": "https://api.mobbin.com/mcp"
+      },
+      "rive": {
+        "type": "remote",
+        "url": "http://127.0.0.1:9791/mcp"
+      }
+    }
+  }
+}

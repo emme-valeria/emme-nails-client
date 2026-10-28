@@ -1,0 +1,78 @@
+/** Design tokens compartidos por las superficies Expo. */
+export const emmeTokens = {
+  brand: {
+    primary: '#A63E68',
+    primaryPressed: '#87304F',
+    primarySoft: '#F5E4EB',
+    onPrimary: '#FFFFFF',
+  },
+  semantic: {
+    success: '#216648',
+    successBackground: '#E7F3EC',
+    warning: '#795200',
+    warningBackground: '#FBF1D8',
+    error: '#A52A3A',
+    errorBackground: '#FCEAEC',
+  },
+  modes: {
+    neutral: {
+      background: '#F3F4F5',
+      surface: '#FFFFFF',
+      surfaceSubtle: '#F8F8F9',
+      foreground: '#191617',
+      secondary: '#665E62',
+      muted: '#746B70',
+      border: '#E7E4E5',
+      separator: 'rgba(38, 29, 33, 0.08)',
+      input: '#F8F7F7',
+    },
+    tinted: {
+      foreground: '#FFFFFF',
+      secondary: '#FFFFFF',
+      muted: '#FFFFFF',
+      scrimTop: 'rgba(17,12,15,0.05)',
+      scrimBottom: 'rgba(17,12,15,0.78)',
+      surface: 'rgba(255,255,255,0.94)',
+      separator: 'rgba(255,255,255,0.22)',
+    },
+  },
+  typography: {
+    family: 'System',
+    size: { caption: 12, footnote: 14, body: 16, section: 20, title: 28, display: 34 },
+    weight: { regular: '400', medium: '500', semibold: '600', bold: '700' },
+  },
+  radius: { thumbnail: 14, card: 20, hero: 28, field: 18, pill: 999 },
+  spacing: { xxs: 4, xs: 8, sm: 12, md: 16, lg: 20, xl: 24, xxl: 32, section: 40 },
+  shadow: {
+    card: { color: '#241B20', opacity: 0.06, radius: 14, x: 0, y: 5, elevation: 2 },
+    floating: { color: '#202024', opacity: 0.12, radius: 20, x: 0, y: 7, elevation: 10 },
+  },
+} as const;
+
+/** Backwards-compatible aliases while the existing Expo screens migrate to emmeTokens. */
+export const colors = {
+  background: emmeTokens.modes.neutral.background,
+  foreground: emmeTokens.modes.neutral.foreground,
+  primary: emmeTokens.brand.primary,
+  primaryForeground: emmeTokens.brand.onPrimary,
+  secondary: emmeTokens.modes.neutral.surfaceSubtle,
+  secondaryForeground: emmeTokens.modes.neutral.foreground,
+  muted: 'rgba(38,29,33,0.05)',
+  mutedForeground: emmeTokens.modes.neutral.muted,
+  accent: 'rgba(166,62,104,0.12)',
+  destructive: '#B4233E',
+  border: emmeTokens.modes.neutral.separator,
+  input: emmeTokens.modes.neutral.input,
+  success: emmeTokens.semantic.success,
+  successBackground: emmeTokens.semantic.successBackground,
+  successForeground: emmeTokens.semantic.success,
+  warning: emmeTokens.semantic.warning,
+  warningBackground: emmeTokens.semantic.warningBackground,
+  warningForeground: emmeTokens.semantic.warning,
+  error: emmeTokens.semantic.error,
+  errorBackground: emmeTokens.semantic.errorBackground,
+  errorForeground: emmeTokens.semantic.error,
+  vip: '#6250A4',
+  vipBackground: '#EFECFA',
+  vipForeground: '#4D3C8E',
+} as const;

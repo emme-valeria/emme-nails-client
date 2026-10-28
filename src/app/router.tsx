@@ -16,7 +16,6 @@ import { OnboardingPage, ClientTourModal } from '@/features/onboarding';
 import { EmmeAiChatWidget } from '@/features/chat';
 import {
   useAppLifecycle,
-  AppStartupSplash,
   OfflineBanner,
   PwaInstallPrompt,
   WebNotificationPrompt,
@@ -50,11 +49,6 @@ function AppContent() {
     location.pathname.startsWith('/agendar') ||
     location.pathname.startsWith('/appointments/new') ||
     location.pathname.startsWith('/quotes');
-
-  // App Initialization Cold Start Splash
-  if (lifecycleState.phase === 'initializing') {
-    return <AppStartupSplash isOffline={!lifecycleState.isOnline} />;
-  }
 
   if (!isAuthenticated) {
     return (
@@ -109,12 +103,12 @@ function AppContent() {
             : "h-screen overflow-y-auto pb-32 lg:pb-0"
       )}>
         <div className={cn(
-          "max-w-[1800px] mx-auto w-full",
+          "max-w-[1680px] mx-auto w-full",
           currentPath === 'chat' 
             ? "px-0 sm:px-6 lg:px-16 pt-0 pb-0 lg:py-8 flex-1 flex flex-col min-h-0 h-full overflow-hidden" 
             : currentPath === 'inicio' || currentPath === 'dashboard'
               ? "px-0 pt-0 pb-8 lg:pt-0 lg:pb-12"
-              : "px-4 sm:px-10 lg:px-16 pt-2 sm:pt-3 pb-8 lg:pt-4 lg:pb-12"
+              : "px-4 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 pt-2 sm:pt-3 pb-8 lg:pt-6 lg:pb-12"
         )}>
 
           <AnimatePresence mode="wait">

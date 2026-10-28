@@ -93,7 +93,7 @@ export function UpcomingAppointmentsList({
               </div>
 
               {/* Glass List Container */}
-              <div className="bg-white/70 dark:bg-[#1E1E1E]/60 backdrop-blur-[20px] rounded-[24px] border border-white/40 dark:border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] divide-y divide-black/[0.04] dark:divide-white/[0.06] overflow-hidden">
+              <div className="material-thin dark:bg-[#1E1E1E]/60 rounded-[24px] divide-y divide-black/[0.04] dark:divide-white/[0.06] overflow-hidden">
                 {group.appointments.map((apt) => {
                   const service = services.find((s) => s.id === apt.serviceId) || {
                     id: apt.serviceId,
@@ -151,10 +151,13 @@ export function UpcomingAppointmentsList({
                             <span>•</span>
                             <span
                               className={cn(
-                                "font-bold",
-                                isConfirmed ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+                                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold",
+                                isConfirmed
+                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
                               )}
                             >
+                              <span className={cn("size-1.5 rounded-full", isConfirmed ? "bg-emerald-500 animate-pulse" : "bg-amber-500")} />
                               {isConfirmed ? 'Confirmada' : 'Pendiente'}
                             </span>
                           </div>
@@ -190,7 +193,7 @@ export function UpcomingAppointmentsList({
         </div>
       ) : (
         /* Glass Empty State */
-        <div className="py-16 px-6 text-center bg-white/70 dark:bg-[#1E1E1E]/60 backdrop-blur-[20px] rounded-[28px] border border-white/40 dark:border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] space-y-4">
+        <div className="material-thin dark:bg-[#1E1E1E]/60 rounded-[28px] py-16 px-6 text-center space-y-4">
           <div className="size-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto border border-primary/20">
             <Calendar className="size-6" />
           </div>

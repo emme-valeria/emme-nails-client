@@ -45,11 +45,9 @@ export function useAppLifecycle() {
 
   const { platform, isStandalone } = detectPlatform();
 
-  // Initialization routine with simulated cold-start handshake
+  // Inicializa las capacidades sin añadir una segunda pantalla de carga.
   useEffect(() => {
     let isMounted = true;
-    const startTime = Date.now();
-    const minSplashDuration = 400; // ms to ensure smooth visual transition without jank
 
     const initApp = async () => {
       try {
@@ -80,14 +78,9 @@ export function useAppLifecycle() {
           }, 3500);
         }
 
-        const elapsed = Date.now() - startTime;
-        const remainingDelay = Math.max(0, minSplashDuration - elapsed);
-
-        setTimeout(() => {
-          if (isMounted) {
-            setPhase(typeof navigator !== 'undefined' && navigator.onLine ? 'ready' : 'offline_ready');
-          }
-        }, remainingDelay);
+        if (isMounted) {
+          setPhase(typeof navigator !== 'undefined' && navigator.onLine ? 'ready' : 'offline_ready');
+        }
       } catch (err) {
         console.warn('App initialization warning:', err);
         if (isMounted) setPhase('ready');

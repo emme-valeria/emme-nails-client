@@ -13,6 +13,7 @@ export interface Appointment {
   durationMinutes: number;
   totalPrice: number;
   depositPaid: number;
+  location?: string;
   status: 'confirmed' | 'completed' | 'cancelled';
   createdAt: string;
 }

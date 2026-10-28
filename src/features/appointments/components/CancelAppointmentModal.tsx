@@ -24,7 +24,7 @@ export function CancelAppointmentModal({
       <motion.div 
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-[32px] max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl relative border border-black/[0.04]"
+        className="material-regular dark:bg-[#1C1C1E]/90 dark:border-white/10 rounded-[32px] max-w-md w-full p-6 sm:p-8 space-y-6 relative"
       >
         <div className="size-12 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mx-auto">
           <AlertCircle className="size-6" />

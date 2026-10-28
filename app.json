@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Emme Studio",
+    "slug": "emme-studio",
+    "scheme": "emmestudio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "root": "./app"
+        }
+      ],
+      "expo-status-bar",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FDFDFD",
+          "dark": {
+            "backgroundColor": "#0E0E10"
+          }
+        }
+      ],
+      "expo-font",
+      "expo-video"
+    ],
+    "web": {
+      "bundler": "metro",
+      "name": "Emme Studio"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.emmestudio.client"
+    },
+    "android": {
+      "package": "com.emmestudio.client"
+    }
+  }
+}

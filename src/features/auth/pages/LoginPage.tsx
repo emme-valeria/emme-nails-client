@@ -18,35 +18,6 @@ export function LoginPage() {
   const [otpError, setOtpError] = useState(false);
 
   useEffect(() => {
-    // Detect country by IP
-    const detectCountry = async () => {
-      try {
-        const response = await fetch('https://get.geojs.io/v1/ip/country.json');
-        const data = await response.json();
-        
-        const countryToDialCode: Record<string, string> = {
-          'MX': '+52',
-          'US': '+1',
-          'ES': '+34',
-          'AR': '+54',
-          'CO': '+57',
-          'CL': '+56',
-          'PE': '+51'
-        };
-        
-        if (data.country && countryToDialCode[data.country]) {
-          setCountryCode(countryToDialCode[data.country]);
-        }
-      } catch (error) {
-        // Silently fail and keep default +52
-        console.error('Failed to detect country by IP', error);
-      }
-    };
-    
-    detectCountry();
-  }, []);
-
-  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (showOTPInput && resendTimer > 0) {
       interval = setInterval(() => {

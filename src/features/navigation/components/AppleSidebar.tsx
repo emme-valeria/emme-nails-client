@@ -87,7 +87,7 @@ export function AppleSidebar({ activeTab }: AppleSidebarProps) {
     <aside
       className={cn(
         "h-screen sticky top-0 z-40 hidden lg:flex flex-col select-none relative",
-        "apple-light-menu border-r border-white/80 dark:border-white/10 w-[280px] shrink-0 px-5 py-6 justify-between shadow-[6px_0_36px_rgba(0,0,0,0.04)]"
+        "apple-light-menu border-r border-white/80 dark:border-white/10 w-[264px] 2xl:w-[280px] shrink-0 px-4 2xl:px-5 py-6 justify-between shadow-[6px_0_36px_rgba(0,0,0,0.04)]"
       )}
     >
       {/* Specular Apple Light Top Line */}
